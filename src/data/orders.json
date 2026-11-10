@@ -1,0 +1,26 @@
+[
+  {
+    "id": "ORD-001",
+    "title": "Gomitas Rojas de Pitahaya",
+    "description": "Cuidado con la temperatura: Las betalaínas se degradan a más de 40°C.",
+    "targetSpecs": {
+      "sweetener": "b2",
+      "pigment": "p1",
+      "shape": "cuadrado"
+    },
+    "timeLimit": 90,
+    "reward": 150
+  },
+  {
+    "id": "ORD-002",
+    "title": "Gomitas Energéticas de Café",
+    "description": "Usa restos de café de chuspa. Requiere buena homogeneización.",
+    "targetSpecs": {
+      "sweetener": "b3",
+      "pigment": "p2",
+      "shape": "osito"
+    },
+    "timeLimit": 120,
+    "reward": 200
+  }
+]

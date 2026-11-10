@@ -1,0 +1,41 @@
+{
+  "bases": [
+    { "id": "b1", "name": "Agua purificada", "type": "solvente", "color": "transparent" },
+    { "id": "b2", "name": "Endulzante: Panela local", "type": "edulcorante", "color": "#b45309" },
+    { "id": "b3", "name": "Endulzante: Azúcar blanca", "type": "edulcorante", "color": "#f3f4f6" }
+  ],
+  "gellingAgents": [
+    { 
+      "id": "g1", 
+      "name": "Gelatina sin sabor", 
+      "activationTemp": 60, 
+      "degradationTemp": 95
+    }
+  ],
+  "pigments": [
+    {
+      "id": "p1",
+      "name": "Cáscaras de Pitahaya",
+      "compound": "Betalaínas",
+      "color": "#ef4444",
+      "maxTemp": 40,
+      "preparation": "Maceración acidificada"
+    },
+    {
+      "id": "p2",
+      "name": "Restos de Café",
+      "compound": "Melanoidinas",
+      "color": "#451a03",
+      "maxTemp": 90,
+      "preparation": "Infusión y filtración"
+    },
+    {
+      "id": "p3",
+      "name": "Ralladura de Cítricos",
+      "compound": "Carotenoides",
+      "color": "#eab308",
+      "maxTemp": 90,
+      "preparation": "Extracción acuosa"
+    }
+  ]
+}
