@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useGame } from '../../context/GameContext';
-import ordersData from '../../data/orders.json';
+import Gummy from '../entities/Gummy';
+import { ArrowIcon, CheckIcon, CrossIcon } from '../entities/Icons';
 
 export default function QualityControlStation() {
-  const { activeTray, setActiveTray, activeOrders, setActiveOrders, setScore } = useGame();
+  const { activeTray, activeOrders, recordResult, nextOrder } = useGame();
   const [report, setReport] = useState(null);
 
   useEffect(() => {
@@ -59,7 +60,13 @@ export default function QualityControlStation() {
         earnedPoints: isSuccess ? currentOrder.reward : 0
       });
 
-      if (isSuccess) setScore(prev => prev + currentOrder.reward);
+      // Aprobado: suma los puntos del pedido. Rechazado: 0 puntos y se pasa al siguiente pedido.
+      recordResult({
+        id: currentOrder.id,
+        title: currentOrder.title,
+        status: isSuccess ? 'approved' : 'failed',
+        points: isSuccess ? currentOrder.reward : 0
+      });
 
     } catch (error) {
       console.error(error);
@@ -67,59 +74,58 @@ export default function QualityControlStation() {
     }
   }, []); // Se ejecuta solo una vez cuando llega a la estación 5
 
-  const handleNextOrder = () => {
-    // 1. Avanzamos la cola
-    setActiveOrders(prev => {
-      const nextQueue = prev.slice(1);
-      if (nextQueue.length === 0) {
-        return ordersData.map(o => ({ ...o, timeRemaining: o.timeLimit }));
-      }
-      return nextQueue;
-    });
+  const isLastOrder = activeOrders.length <= 1;
 
-    // 2. Limpiamos la bandeja para el nuevo lote (Reset de variables a estado inicial)
-    setActiveTray({
-      station: 1, 
-      base: null,
-      gellingAgent: null,
-      pigment: null,
-      mixLevel: 0,
-      temperature: 20,
-      shape: null
-    });
-  };
+  // Avanza al siguiente pedido (o a los resultados si era el último) y limpia la bandeja
+  const handleNextOrder = () => nextOrder();
 
   if (!report) {
     return (
       <div className="w-full h-full flex flex-col items-center justify-center p-4">
-         <h2 className="text-2xl font-bold text-yellow-500 animate-pulse">⚙️ Analizando composición química...</h2>
+        <h2 className="text-2xl font-extrabold text-yellow-300 gl-pulse flex items-center gap-3">
+          <svg className="gl-spinner" width="34" height="34" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="#ffd84a" strokeWidth="3" strokeDasharray="30 26" fill="none" strokeLinecap="round" /></svg>
+          Analizando composición química...
+        </h2>
       </div>
     );
   }
 
+  // Visual: gomita resultante (color de la mezcla o del pigmento elegido)
+  const gummyColor = activeTray.pigment?.color ?? activeTray.base?.color;
+
   return (
     <div className="w-full h-full flex flex-col items-center justify-center p-4">
-      <div className={`w-full max-w-2xl border-4 p-8 rounded-lg bg-neutral-950 flex flex-col items-center shadow-2xl
-        ${report.success ? 'border-green-500 shadow-[0_0_40px_rgba(34,197,94,0.3)]' : 'border-red-600 shadow-[0_0_40px_rgba(220,38,38,0.3)]'}`}
-      >
-        <h2 className={`text-4xl font-black mb-2 tracking-widest uppercase ${report.success ? 'text-green-500' : 'text-red-500'}`}>
-          {report.success ? '✔ LOTE APROBADO' : '✖ LOTE RECHAZADO'}
-        </h2>
-        
-        <div className="w-full bg-black p-4 border-2 border-neutral-800 rounded mb-8 mt-4 min-h-[150px]">
-          <p className="text-yellow-500 font-mono text-sm font-bold mb-3 uppercase tracking-wider">Reporte de Laboratorio:</p>
-          <ul className="list-disc pl-5 font-mono text-sm space-y-3">
+      <div className={`gl-report ${report.success ? '' : 'gl-report--bad'}`}>
+        <div className="gl-report__ribbon">
+          {report.success ? <CheckIcon size={26} /> : <CrossIcon size={26} />}
+          {report.success ? 'LOTE APROBADO' : 'LOTE RECHAZADO'}
+        </div>
+
+        <div className="flex justify-center">
+          <Gummy
+            shape={activeTray.shape ?? 'cuadrado'} color={gummyColor} size={92}
+            wobble={report.success} sparkle={report.success}
+            className={report.success ? '' : 'gl-sad'}
+          />
+        </div>
+        {report.success && (
+          <p className="font-extrabold text-lg mt-1" style={{ color: '#d98a0c' }}>+{report.earnedPoints} PTS</p>
+        )}
+
+        <div className="gl-report__list">
+          <p className="font-extrabold text-sm uppercase tracking-wider mb-2" style={{ color: '#7458b0' }}>Reporte de Laboratorio:</p>
+          <ul>
             {report.messages.map((msg, idx) => (
-              <li key={idx} className={`${report.success ? 'text-green-400' : 'text-red-400'} leading-relaxed`}>{msg}</li>
+              <li key={idx}>
+                <span className="gl-report__dot">{report.success ? <CheckIcon size={12} /> : <CrossIcon size={12} />}</span>
+                <span>{msg}</span>
+              </li>
             ))}
           </ul>
         </div>
 
-        <button 
-          onClick={handleNextOrder}
-          className="px-10 py-4 font-black text-xl rounded border-b-4 bg-yellow-500 text-black border-yellow-700 hover:bg-yellow-400 active:border-b-0 active:translate-y-1 transition-all shadow-lg"
-        >
-          PREPARAR NUEVO LOTE ➔
+        <button onClick={handleNextOrder} className="gl-btn gl-btn--gold gl-btn--xl">
+          {isLastOrder ? 'VER RESULTADOS' : 'SIGUIENTE PEDIDO'} <ArrowIcon size={24} />
         </button>
       </div>
     </div>

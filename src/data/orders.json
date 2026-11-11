@@ -8,7 +8,7 @@
       "pigment": "p1",
       "shape": "cuadrado"
     },
-    "timeLimit": 90,
+    "timeLimit": 50,
     "reward": 150
   },
   {
@@ -20,7 +20,43 @@
       "pigment": "p2",
       "shape": "osito"
     },
-    "timeLimit": 120,
+    "timeLimit": 50,
     "reward": 200
+  },
+  {
+    "id": "ORD-003",
+    "title": "Estrellas Doradas de Cítricos",
+    "description": "Los carotenoides toleran el calor, pero la gomita debe llegar fría al molde.",
+    "targetSpecs": {
+      "sweetener": "b3",
+      "pigment": "p3",
+      "shape": "estrella"
+    },
+    "timeLimit": 50,
+    "reward": 175
+  },
+  {
+    "id": "ORD-004",
+    "title": "Ositos Rosados de Pitahaya",
+    "description": "Betalaínas otra vez: no pases de 40°C y agita bien la mezcla.",
+    "targetSpecs": {
+      "sweetener": "b3",
+      "pigment": "p1",
+      "shape": "osito"
+    },
+    "timeLimit": 50,
+    "reward": 225
+  },
+  {
+    "id": "ORD-005",
+    "title": "Estrellas de Café con Panela",
+    "description": "Pedido final: panela, café y mucha homogeneidad.",
+    "targetSpecs": {
+      "sweetener": "b2",
+      "pigment": "p2",
+      "shape": "estrella"
+    },
+    "timeLimit": 50,
+    "reward": 250
   }
 ]

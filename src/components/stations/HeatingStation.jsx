@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useGame } from '../../context/GameContext';
+import { FlameIcon } from '../entities/Icons';
 
 export default function HeatingStation() {
   const { activeTray, setActiveTray } = useGame();
@@ -31,62 +32,58 @@ export default function HeatingStation() {
 
   // Lógica del color del termómetro (Dinámico)
   const getTempColor = (temp) => {
-    if (temp < maxSafeTemp - 15) return 'bg-blue-500'; // Frío / Subiendo
-    if (temp >= maxSafeTemp - 15 && temp <= maxSafeTemp) return 'bg-green-500'; // Óptimo
-    return 'bg-red-600'; // Peligro / Quemado
+    if (temp < maxSafeTemp - 15) return '#3b82f6'; // Frío / Subiendo
+    if (temp >= maxSafeTemp - 15 && temp <= maxSafeTemp) return '#22c55e'; // Óptimo
+    return '#dc2626'; // Peligro / Quemado
   };
 
   return (
-    <div className="w-full h-full flex flex-col">
-      <div className="flex justify-between items-center mb-4 border-b-2 border-neutral-700 pb-2">
-        <h2 className="text-xl font-black text-red-500">03. MARMITA TÉRMICA (CALOR)</h2>
-        {/* Botón de avance eliminado */}
+    <div className="gl-panel">
+      <div className="gl-panel__head">
+        <span className="gl-panel__num" style={{ '--n1': '#ff9aa8', '--n2': '#e0314b' }}>3</span>
+        <h2 className="gl-panel__title">03. MARMITA TÉRMICA (CALOR)</h2>
       </div>
 
-      <div className="flex gap-8 flex-1">
+      <div className="gl-panel__body">
         {/* Panel de Control del Fuego */}
-        <div className="flex-1 bg-neutral-950 rounded-lg border border-neutral-800 p-6 flex flex-col items-center justify-center">
-          <p className="text-neutral-400 font-bold mb-6 uppercase tracking-widest text-sm">Control de Quemador</p>
-          <button 
-            onClick={() => setIsBurnerOn(!isBurnerOn)}
-            className={`w-40 h-40 rounded-full border-b-8 flex items-center justify-center transition-all active:border-b-0 active:translate-y-2 shadow-xl
-              ${isBurnerOn 
-                ? 'bg-red-600 border-red-900 shadow-[0_0_30px_rgba(220,38,38,0.6)] animate-pulse' 
-                : 'bg-neutral-700 border-neutral-900'}`}
-          >
-            <span className="text-3xl font-black text-white">
-              {isBurnerOn ? '🔥 APAGAR' : 'ENCENDER'}
-            </span>
-          </button>
+        <div className="gl-section" style={{ flex: 1.4 }}>
+          <h3 className="gl-section__title">Control de Quemador</h3>
+          <div className="gl-section__body" style={{ alignItems: 'center' }}>
+            <button
+              onClick={() => setIsBurnerOn(!isBurnerOn)}
+              className={`gl-btn gl-btn--round ${isBurnerOn ? 'gl-btn--red gl-btn--glow' : 'gl-btn--orange'}`}
+              style={{ width: '6.6rem', height: '6.6rem', fontSize: '1.1rem' }}
+            >
+              <FlameIcon size={isBurnerOn ? 44 : 38} />
+              {isBurnerOn ? 'APAGAR' : 'ENCENDER'}
+            </button>
+          </div>
         </div>
 
         {/* Termómetro Dinámico */}
-        <div className="w-1/3 bg-neutral-950 rounded-lg border border-neutral-800 p-6 flex flex-col items-center justify-center">
-          <p className="text-neutral-400 font-bold mb-4 uppercase text-sm">Termómetro: {activeTray.temperature}°C</p>
-          
-          <div className="relative w-12 h-32 bg-neutral-900 border-4 border-neutral-600 rounded-full flex flex-col justify-end p-1 overflow-hidden">
-            
-            {/* Zonas de advertencia visual basada en el pigmento elegido */}
-            <div 
-              className="absolute w-full bg-red-500/20 border-t-2 border-red-500/50 z-0 flex items-start justify-center pt-1"
-              style={{ bottom: `${(maxSafeTemp / 120) * 100}%`, top: 0 }}
-            >
-               <span className="text-[8px] text-red-300 font-bold text-center leading-tight mt-1">LÍMITE:<br/>{maxSafeTemp}°C</span>
+        <div className="gl-section" style={{ flex: 1 }}>
+          <h3 className="gl-section__title">Termómetro: {activeTray.temperature}°C</h3>
+          <div className="gl-section__body" style={{ alignItems: 'center', gap: '1rem' }}>
+            <div className="gl-thermo">
+              {/* Zonas de advertencia visual basada en el pigmento elegido */}
+              <div className="gl-thermo__danger" style={{ bottom: `${(maxSafeTemp / 120) * 100}%` }}>
+                <span>LÍMITE:<br />{maxSafeTemp}°C</span>
+              </div>
+
+              {/* Nivel de mercurio */}
+              <div
+                className="gl-thermo__fill"
+                style={{ height: `${(activeTray.temperature / 120) * 100}%`, backgroundColor: getTempColor(activeTray.temperature) }}
+              ></div>
             </div>
 
-            {/* Nivel de mercurio */}
-            <div 
-              className={`w-full rounded-full transition-all duration-300 z-10 ${getTempColor(activeTray.temperature)}`}
-              style={{ height: `${(activeTray.temperature / 120) * 100}%` }}
-            ></div>
+            {activeTray.pigment && (
+              <p className="gl-hint-text" style={{ textAlign: 'left' }}>
+                Compuesto:<br /><b style={{ color: '#d98a0c', fontSize: '.8rem' }}>{activeTray.pigment.compound}</b><br />
+                Temperatura Max: {maxSafeTemp}°C
+              </p>
+            )}
           </div>
-          
-          {activeTray.pigment && (
-            <p className="text-[10px] text-neutral-500 mt-4 text-center">
-              Compuesto: <span className="font-bold text-yellow-500">{activeTray.pigment.compound}</span><br/>
-              Temperatura Max: {maxSafeTemp}°C
-            </p>
-          )}
         </div>
       </div>
     </div>

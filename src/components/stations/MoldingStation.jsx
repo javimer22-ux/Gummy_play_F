@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useGame } from '../../context/GameContext';
+import { GummyMold } from '../entities/Gummy';
+import { SnowIcon } from '../entities/Icons';
 
 export default function MoldingStation() {
   const { activeTray, setActiveTray } = useGame();
@@ -21,9 +23,9 @@ export default function MoldingStation() {
   }, [isCooling, setActiveTray]);
 
   const shapes = [
-    { id: 'cuadrado', icon: '🟥', name: 'Cuadrado' },
-    { id: 'estrella', icon: '⭐', name: 'Estrella' },
-    { id: 'osito', icon: '🧸', name: 'Osito' }
+    { id: 'cuadrado', name: 'Cuadrado' },
+    { id: 'estrella', name: 'Estrella' },
+    { id: 'osito', name: 'Osito' }
   ];
 
   const selectShape = (shapeId) => {
@@ -31,64 +33,58 @@ export default function MoldingStation() {
   };
 
   return (
-    <div className="w-full h-full flex flex-col">
-      <div className="flex justify-between items-center mb-4 border-b-2 border-neutral-700 pb-2">
-        <h2 className="text-xl font-black text-orange-500">04. MOLDEADO Y ENFRIAMIENTO</h2>
-
+    <div className="gl-panel">
+      <div className="gl-panel__head">
+        <span className="gl-panel__num" style={{ '--n1': '#ffc16b', '--n2': '#f27a14' }}>4</span>
+        <h2 className="gl-panel__title">04. MOLDEADO Y ENFRIAMIENTO</h2>
       </div>
 
-      <div className="flex gap-8 flex-1">
+      <div className="gl-panel__body">
         {/* Panel de Selección de Moldes */}
-        <div className="flex-1 bg-neutral-950 rounded-lg border border-neutral-800 p-4">
-          <h3 className="text-sm text-neutral-400 font-bold mb-3 uppercase">1. Inyectar en matriz</h3>
-          <div className="flex gap-4 h-24">
+        <div className="gl-section" style={{ flex: 1.3 }}>
+          <h3 className="gl-section__title">1. Inyectar en matriz</h3>
+          <div className="gl-section__body">
             {shapes.map(shape => (
-              <button 
+              <button
                 key={shape.id}
                 onClick={() => selectShape(shape.id)}
-                className={`flex-1 flex flex-col items-center justify-center rounded-lg border-b-4 transition-all active:border-b-0 active:translate-y-1
-                  ${activeTray.shape === shape.id 
-                    ? 'bg-orange-800 border-orange-950 ring-2 ring-orange-500' 
-                    : 'bg-neutral-800 border-neutral-900 hover:bg-neutral-700'}`}
+                className={`gl-item ${activeTray.shape === shape.id ? 'is-selected' : ''}`}
               >
-                <span className="text-3xl mb-1">{shape.icon}</span>
-                <span className="text-xs font-bold">{shape.name}</span>
+                <span className="gl-item__art"><GummyMold shape={shape.id} size={58} /></span>
+                <span className="gl-item__name" style={{ fontSize: '.8rem' }}>{shape.name}</span>
               </button>
             ))}
           </div>
         </div>
 
         {/* Panel de Enfriamiento (Choque Térmico) */}
-        <div className="flex-1 bg-neutral-950 rounded-lg border border-neutral-800 p-4 flex flex-col items-center justify-center relative overflow-hidden">
-          <h3 className="text-sm text-neutral-400 font-bold mb-2 uppercase absolute top-4 left-4">2. Choque Térmico</h3>
-          
-          <div className="flex items-center gap-6 mt-4">
-            {/* Indicador de temperatura actual */}
-            <div className="text-center">
-              <p className="text-xs text-neutral-500 font-bold">TEMP. ACTUAL</p>
-              <p className={`text-3xl font-black font-mono ${activeTray.temperature > 40 ? 'text-red-500' : 'text-blue-400'}`}>
-                {Math.floor(activeTray.temperature)}°C
-              </p>
-            </div>
+        <div className="gl-section" style={{ flex: 1 }}>
+          <h3 className="gl-section__title">2. Choque Térmico</h3>
+          <div className="gl-section__body" style={{ flexDirection: 'column', alignItems: 'center', gap: '.1rem' }}>
+            <div className="flex items-center gap-5">
+              {/* Indicador de temperatura actual */}
+              <div className="text-center">
+                <p className="gl-hint-text">TEMP. ACTUAL</p>
+                <p style={{ fontSize: '2.1rem', fontWeight: 800, lineHeight: 1, color: activeTray.temperature > 40 ? '#e0314b' : '#3f6fe6', fontVariantNumeric: 'tabular-nums' }}>
+                  {Math.floor(activeTray.temperature)}°C
+                </p>
+              </div>
 
-            {/* Botón del Ventilador */}
-            <button 
-              onMouseDown={() => setIsCooling(true)}
-              onMouseUp={() => setIsCooling(false)}
-              onMouseLeave={() => setIsCooling(false)} // Por si el cursor sale del botón
-              className={`w-24 h-24 rounded-full border-4 flex items-center justify-center transition-all select-none
-                ${isCooling 
-                  ? 'bg-blue-600 border-blue-300 shadow-[0_0_20px_rgba(37,99,235,0.8)]' 
-                  : 'bg-neutral-800 border-neutral-600'}`}
-            >
-              <span className={`text-4xl ${isCooling ? 'animate-spin' : ''}`}>
-                ❄️
-              </span>
-            </button>
+              {/* Botón del Ventilador */}
+              <button
+                onMouseDown={() => setIsCooling(true)}
+                onMouseUp={() => setIsCooling(false)}
+                onMouseLeave={() => setIsCooling(false)} // Por si el cursor sale del botón
+                className={`gl-btn gl-btn--blue gl-btn--round ${isCooling ? 'gl-btn--glow' : ''}`}
+                style={{ width: '4.8rem', height: '4.8rem', userSelect: 'none' }}
+              >
+                <span className={isCooling ? 'gl-spinner' : ''} style={{ display: 'grid' }}><SnowIcon size={38} /></span>
+              </button>
+            </div>
+            <p className="gl-hint-text" style={{ fontSize: '.6rem' }}>
+              Mantén presionado para encender turbinas.<br />Enfría por debajo de 30°C para desmoldar.
+            </p>
           </div>
-          <p className="text-[10px] text-neutral-500 mt-4 uppercase font-bold text-center">
-            Mantén presionado para encender turbinas.<br/>Enfría por debajo de 30°C para desmoldar.
-          </p>
         </div>
       </div>
     </div>

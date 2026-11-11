@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { GameProvider, useGame } from './context/GameContext';
 import { useGameLoop } from './hooks/useGameLoop';
 import ConveyorBelt from './components/layout/ConveyorBelt';
@@ -6,6 +7,11 @@ import MixerStation from './components/stations/MixerStation';
 import HeatingStation from './components/stations/HeatingStation';
 import MoldingStation from './components/stations/MoldingStation';
 import QualityControlStation from './components/stations/QualityControlStation';
+import TimeUpModal from './components/layout/TimeUpModal';
+import ResultsModal from './components/layout/ResultsModal';
+import Gummy from './components/entities/Gummy';
+import { ArrowIcon, PauseIcon, PlayIcon, SpinIcon, StarIcon } from './components/entities/Icons';
+import ingredientsData from './data/ingredients.json';
 
 const formatTime = (seconds) => {
   const m = Math.floor(seconds / 60).toString().padStart(2, '0');
@@ -13,109 +19,179 @@ const formatTime = (seconds) => {
   return `${m}:${s}`;
 };
 
+// Datos legibles de un pedido (solo presentación)
+const describeOrder = (order) => {
+  const { bases, pigments } = ingredientsData;
+  const sweet = bases.find((b) => b.id === order.targetSpecs.sweetener);
+  const pig = pigments.find((p) => p.id === order.targetSpecs.pigment);
+  return { sweet, pig };
+};
+
 function GameBoard() {
   useGameLoop();
-  const { isPlaying, setIsPlaying, shiftTime, activeOrders, activeTray, score, advanceConveyor } = useGame();
+  const {
+    isPlaying, setIsPlaying, activeOrders, activeTray, score, totalOrders, gameFinished,
+    advanceConveyor, retreatConveyor, restartGame,
+  } = useGame();
+  const current = activeOrders[0];
+  const currentInfo = current ? describeOrder(current) : null;
+  const orderNumber = Math.min(totalOrders - activeOrders.length + 1, totalOrders);
+
+  // Reiniciar partida con confirmación (pausa mientras se decide)
+  const [confirming, setConfirming] = useState(false);
+  const [resumeAfter, setResumeAfter] = useState(false);
+  const askRestart = () => { setResumeAfter(isPlaying); setIsPlaying(false); setConfirming(true); };
+  const cancelRestart = () => { setConfirming(false); if (resumeAfter) setIsPlaying(true); };
+  const confirmRestart = () => { setConfirming(false); restartGame(); };
+
+  // Pedido caducado: el reloj del pedido activo llegó a 0
+  const orderExpired = Boolean(current) && current.timeRemaining <= 0 && activeTray.station < 5;
+
+  // Reglas de la cinta: ← no baja de la estación 1; se bloquean en pausa, en QA (5), con alertas y al terminar
+  const blocked = gameFinished || orderExpired || confirming;
+  const canAdvance = isPlaying && activeTray.station < 5 && !blocked;
+  const canRetreat = isPlaying && activeTray.station > 1 && activeTray.station < 5 && !blocked;
+
+  // Atajo de teclado: flechas ← → (misma lógica que los botones)
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.key === 'ArrowRight' && canAdvance) advanceConveyor();
+      if (e.key === 'ArrowLeft' && canRetreat) retreatConveyor();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [canAdvance, canRetreat, advanceConveyor, retreatConveyor]);
 
   return (
-    <div className="flex flex-col h-screen bg-neutral-900 font-sans text-neutral-100 relative">
+    <div className="gl-app">
 
-    {/* ZONA 1: HUD y Pedidos Rediseñado */}
-      <header className="h-32 bg-neutral-800 border-b-4 border-yellow-500 flex items-center px-6 justify-between z-10 shadow-lg">
+      {/* ZONA 1: HUD y Pedidos */}
+      <header className="gl-hud">
         {/* Lado Izquierdo: Controles */}
-        <div className="flex flex-col gap-2">
-          <h1 className="text-3xl font-black text-yellow-500 tracking-wider drop-shadow-md">GUMMY LAB</h1>
-          <div className="flex gap-4 items-center">
+        <div className="flex items-center gap-5 flex-wrap">
+          <h1 className="gl-logo">
+            <Gummy shape="osito" color="#ff3d5a" size={38} shadow={false} wobble />
+            GUMMY LAB
+          </h1>
+          <div className="flex gap-3 items-center flex-wrap">
             <button
               onClick={() => setIsPlaying(!isPlaying)}
-              className={`px-4 py-1 font-bold rounded shadow-inner ${isPlaying ? 'bg-red-600 text-white hover:bg-red-500' : 'bg-green-600 text-white hover:bg-green-500'}`}
+              className={`gl-btn ${isPlaying ? 'gl-btn--red' : 'gl-btn--green'}`}
             >
-              {isPlaying ? '◼ PAUSAR FÁBRICA' : '▶ INICIAR TURNO'}
+              {isPlaying ? <PauseIcon size={18} /> : <PlayIcon size={18} />}
+              {isPlaying ? 'PAUSAR FÁBRICA' : 'INICIAR TURNO'}
             </button>
-            <p className="text-xl font-mono text-yellow-500 bg-black px-3 py-1 rounded border-2 border-neutral-700 shadow-inner">
-              ⏱ {formatTime(shiftTime)}
-            </p>
-            <p className="text-xl font-mono text-green-400 bg-black px-3 py-1 rounded border-2 border-neutral-700 shadow-inner">
-              ⭐ {score} PTS
-            </p>
+            <button onClick={askRestart} className="gl-btn gl-btn--purple gl-btn--icon" aria-label="Reiniciar partida" title="Reiniciar partida">
+              <SpinIcon size={20} />
+            </button>
+            <p className="gl-pill gl-pill--time">PEDIDO {orderNumber} / {totalOrders}</p>
+            <p className="gl-pill gl-pill--score"><StarIcon size={24} />{score} PTS</p>
           </div>
         </div>
 
         {/* Lado Derecho: Sistema de Tickets (Actual vs Cola) */}
-        <div className="flex gap-6 items-center overflow-x-auto pb-2">
-          
-          {/* TICKET DESTACADO: EL PEDIDO ACTUAL */}
-          {activeOrders.length > 0 && (
-            <div className="w-64 bg-yellow-300 text-black p-3 rounded-lg shadow-[0_0_20px_rgba(234,179,8,0.5)] border-4 border-yellow-600 flex flex-col justify-between transform scale-105">
-              <div>
-                <div className="flex justify-between items-center mb-1">
-                  <p className="text-xs font-black uppercase bg-black text-yellow-400 px-2 py-1 rounded shadow">LOTE ACTUAL: {activeOrders[0].id}</p>
-                  <p className={`text-sm font-bold font-mono ${activeOrders[0].timeRemaining < 15 ? 'text-red-600 animate-pulse' : 'text-neutral-800'}`}>
-                    {formatTime(activeOrders[0].timeRemaining)}
-                  </p>
-                </div>
-                <p className="text-sm font-black leading-tight mt-1">{activeOrders[0].title}</p>
+        <div className="flex gap-5 items-center pt-2">
+          {current && (
+            <div className="gl-ticket" title={current.description}>
+              <div className="gl-ticket__art">
+                <Gummy shape={current.targetSpecs.shape} color={currentInfo.pig?.color} size={50} wobble />
               </div>
-              <div className="mt-2 pt-2 border-t-2 border-yellow-500">
-                <p className="text-[11px] text-black font-bold uppercase">
-                  Molde: {activeOrders[0].targetSpecs.shape} | Pigm: {activeOrders[0].targetSpecs.pigment}
+              <div className="flex-1 min-w-0">
+                <div className="flex justify-between items-center gap-2">
+                  <span className="gl-ticket__tag">LOTE ACTUAL: {current.id}</span>
+                  <span className={`font-extrabold tabular-nums ${current.timeRemaining < 15 ? 'text-red-600 gl-pulse' : ''}`}>
+                    {formatTime(current.timeRemaining)}
+                  </span>
+                </div>
+                <p className="font-extrabold leading-tight mt-0.5">{current.title}</p>
+                <p className="gl-ticket__meta">
+                  Molde: {current.targetSpecs.shape} · {currentInfo.pig?.name ?? current.targetSpecs.pigment}
+                  <br />{currentInfo.sweet?.name ?? current.targetSpecs.sweetener}
                 </p>
               </div>
             </div>
           )}
 
           {/* TICKETS EN COLA */}
-          {activeOrders.length > 1 && (
-            <div className="flex gap-2 border-l-2 border-neutral-600 pl-4 opacity-70">
-              {activeOrders.slice(1).map(order => (
-                <div key={order.id} className="w-40 bg-neutral-700 text-neutral-300 p-2 rounded border border-neutral-500 flex flex-col justify-between">
-                  <p className="text-[10px] font-black uppercase text-yellow-500">EN COLA: {order.id}</p>
-                  <p className="text-xs font-bold truncate">{order.title}</p>
-                </div>
-              ))}
+          {activeOrders.slice(1, 2).map((order) => (
+            <div key={order.id} className="gl-ticket gl-ticket--queue">
+              <Gummy shape={order.targetSpecs.shape} color={describeOrder(order).pig?.color} size={34} shadow={false} />
+              <div className="min-w-0">
+                <p className="gl-ticket__meta" style={{ fontSize: '.66rem' }}>EN COLA: {order.id}</p>
+                <p className="font-extrabold text-sm leading-tight truncate max-w-[9rem]">{order.title}</p>
+              </div>
             </div>
-          )}
+          ))}
+          {activeOrders.length > 2 && <span className="gl-pill" style={{ fontSize: '.9rem' }}>+{activeOrders.length - 2}</span>}
         </div>
       </header>
 
-      {/* ZONA 2: Cinta Transportadora */}
-      <main className="flex-1 relative bg-neutral-800 flex flex-col">
-        <div className="flex-1 relative">
-          <ConveyorBelt />
-        </div>
-        
-        {/* ¡NUEVO!: CONTROL CENTRAL DE LA FÁBRICA (ESTILO PURBLE PLACE) */}
-        <div className="h-16 bg-neutral-900 border-t-2 border-neutral-700 flex justify-center items-center px-6 z-20 shadow-[0_-5px_15px_rgba(0,0,0,0.5)]">
-          <button 
-            onClick={advanceConveyor}
-            disabled={!isPlaying || activeTray.station >= 5}
-            className="px-12 py-2 text-xl font-black rounded border-b-4 bg-yellow-500 text-black border-yellow-700 hover:bg-yellow-400 active:border-b-0 active:translate-y-1 transition-all disabled:opacity-50 disabled:cursor-not-allowed tracking-widest"
-          >
-            MUEVE LA CINTA ➔
-          </button>
+      {/* ZONA 2: Fábrica + cinta transportadora */}
+      <main className="flex-1 min-h-0 flex flex-col relative">
+        <ConveyorBelt />
+
+        {!isPlaying && !confirming && !gameFinished && activeTray.station < 5 && (
+          <div className="gl-hint">¡Pulsa «INICIAR TURNO» para arrancar la fábrica!</div>
+        )}
+
+        {/* CONTROL CENTRAL DE LA FÁBRICA: flechas para ir y volver entre estaciones */}
+        <div className="gl-strip">
+          <span className="gl-strip__label">MUEVE LA CINTA</span>
+          <div className="gl-pad">
+            <button
+              onClick={retreatConveyor} disabled={!canRetreat}
+              className="gl-btn gl-btn--lime gl-btn--pill" aria-label="Volver a la estación anterior" title="Volver (←)"
+            >
+              <ArrowIcon size={28} className="gl-flip" />
+            </button>
+            <button
+              onClick={advanceConveyor} disabled={!canAdvance}
+              className="gl-btn gl-btn--lime gl-btn--pill" aria-label="Avanzar a la siguiente estación" title="Avanzar (→)"
+            >
+              <ArrowIcon size={28} />
+            </button>
+          </div>
         </div>
       </main>
 
       {/* ZONA 3: Panel de Control Dinámico */}
-      <footer className="h-64 bg-neutral-900 p-6 flex gap-6 border-t-4 border-yellow-500 z-10 shadow-[0_-10px_15px_-3px_rgba(0,0,0,0.3)]">
-        <div className="flex-1 bg-neutral-900 rounded-lg p-2 border-2 border-neutral-700">
+      <footer className="gl-dock">
+        <div className="h-full">
           {activeTray.station === 1 && <FormulationStation />}
           {activeTray.station === 2 && <MixerStation />}
           {activeTray.station === 3 && <HeatingStation />}
           {activeTray.station === 4 && <MoldingStation />}
           {/* La estación 5 (QA) es modal ahora */}
           {activeTray.station >= 5 && (
-            <div className="h-full flex items-center justify-center flex-col">
-              <h2 className="text-3xl font-black text-neutral-600 mb-2">ESPERANDO REINICIO...</h2>
+            <div className="gl-panel items-center justify-center">
+              <h2 className="gl-panel__title" style={{ fontSize: '1.8rem', opacity: 0.55 }}>ESPERANDO REINICIO...</h2>
             </div>
           )}
         </div>
       </footer>
 
       {/* PANTALLA DE CONTROL DE CALIDAD SUPERPUESTA (MODAL) */}
-      {activeTray.station === 5 && (
-        <div className="absolute inset-0 z-50 bg-black/90 backdrop-blur-sm flex items-center justify-center p-4">
+      {!gameFinished && !orderExpired && activeTray.station === 5 && (
+        <div className="gl-modal">
           <QualityControlStation />
+        </div>
+      )}
+
+      {/* ALERTA DE TIEMPO AGOTADO DEL PEDIDO / RESULTADOS FINALES */}
+      {orderExpired && !gameFinished && <TimeUpModal />}
+      {gameFinished && <ResultsModal />}
+
+      {/* CONFIRMAR REINICIO */}
+      {confirming && (
+        <div className="gl-modal">
+          <div className="gl-report gl-report--shift" role="alertdialog" style={{ maxWidth: '26rem' }}>
+            <div className="gl-report__ribbon">¿REINICIAR PARTIDA?</div>
+            <p className="font-bold mb-4" style={{ color: '#7458b0' }}>Perderás el progreso y los puntos de esta partida.</p>
+            <div className="flex gap-3 justify-center">
+              <button onClick={cancelRestart} className="gl-btn gl-btn--blue">CANCELAR</button>
+              <button onClick={confirmRestart} className="gl-btn gl-btn--red">REINICIAR</button>
+            </div>
+          </div>
         </div>
       )}
 
@@ -129,4 +205,4 @@ export default function App() {
       <GameBoard />
     </GameProvider>
   );
-} 
+}
