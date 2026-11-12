@@ -1,13 +1,15 @@
 import { useId } from 'react';
 import Gummy, { shade, visibleColor } from './Gummy';
+import { STATION } from '../../constants/stations';
 
 /** Bandeja física sobre la cinta: bol de vidrio con líquido → molde con gomita. */
 export default function Tray({ tray, color }) {
   const uid = useId().replace(/:/g, '');
   const c = visibleColor(color);
-  const frac = tray.gellingAgent ? 1 : tray.base ? 0.5 : 0;
-  const hasShape = Boolean(tray.shape) && tray.station >= 4;
-  const hot = tray.temperature > 30 && tray.station >= 3;
+  const frac = (tray.base ? 0.5 : 0) + (tray.gellingAgent ? 0.5 : 0);
+  const lumps = tray.hasLumps === true;
+  const hasShape = Boolean(tray.shape) && tray.station >= STATION.MOLDING;
+  const hot = tray.temperature > 30 && tray.station >= STATION.HEATING;
   const burnt = tray.temperature > 80;
   const topY = hasShape ? 14 : 44;
 
@@ -21,7 +23,7 @@ export default function Tray({ tray, color }) {
           <rect x="14" y="76" width="112" height="26" rx="13" fill="#d3d9ff" stroke="#8f9bdf" strokeWidth="3" />
           <rect x="22" y="80" width="96" height="6" rx="3" fill="#fff" opacity=".6" />
           <g className="gl-jelly">
-            <Gummy shape={tray.shape} color={color} size={66} x="37" y="18" shadow={false} sparkle={tray.station >= 5} />
+            <Gummy shape={tray.shape} color={color} size={66} x="37" y="18" shadow={false} sparkle={tray.station >= STATION.QUALITY} />
           </g>
         </g>
       ) : (
@@ -35,6 +37,9 @@ export default function Tray({ tray, color }) {
               <rect x="20" y="60" width="100" height="44" style={{ fill: c, transition: 'fill .6s' }} />
               <ellipse cx="70" cy="60" rx="50" ry="6" style={{ fill: shade(c, 0.35), transition: 'fill .6s' }} />
             </g>
+            {lumps && !hasShape && [[48, 78, 6], [66, 88, 4.5], [88, 80, 7], [102, 90, 4]].map(([x, y, r]) => (
+              <circle key={x} cx={x} cy={y} r={r} fill="#fff3c9" stroke="#e0b45a" strokeWidth="1.5" />
+            ))}
             {frac > 0 && (
               <>
                 <circle className="gl-bubble" cx="50" cy="90" r="3" fill="#fff" opacity=".7" />

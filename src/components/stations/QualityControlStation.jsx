@@ -44,7 +44,7 @@ export default function QualityControlStation() {
 
       // 4. Validación de Mezcla
       if (activeTray.mixLevel < 100) {
-        errors.push(`Mezcla heterogénea. Faltó tiempo de agitación en la estación 2.`);
+        errors.push(`Mezcla heterogénea. Faltó tiempo de agitación en la estación de Mezclado.`);
         isSuccess = false;
       }
 
@@ -72,7 +72,7 @@ export default function QualityControlStation() {
       console.error(error);
       setReport({ success: false, messages: ["Error crítico en el escáner."], earnedPoints: 0 });
     }
-  }, []); // Se ejecuta solo una vez cuando llega a la estación 5
+  }, []); // Se ejecuta solo una vez cuando llega a la estación de QA
 
   const isLastOrder = activeOrders.length <= 1;
 

@@ -1,4 +1,5 @@
 import Gummy, { shade, visibleColor } from './Gummy';
+import { STATION } from '../../constants/stations';
 
 /* Degradados compartidos por todas las máquinas (se montan una sola vez). */
 export function MachineDefs() {
@@ -97,7 +98,7 @@ function Formulation({ tray, burst }) {
 
 /* ───────── 2. MEZCLADORA: domo de vidrio con paleta ───────── */
 function Mixer({ tray, playing, active }) {
-  const here = trayHere(tray, 2);
+  const here = trayHere(tray, STATION.MIXING);
   const liquid = visibleColor(here ? (tray.pigment?.color ?? tray.base?.color) : '#ff5fa8');
   const idle = active && playing && Boolean(tray.pigment);
   return (
@@ -150,7 +151,7 @@ function Mixer({ tray, playing, active }) {
 
 /* ───────── 3. MARMITA: olla, quemador y termómetro ───────── */
 function Heater({ tray, burning }) {
-  const here = trayHere(tray, 3);
+  const here = trayHere(tray, STATION.HEATING);
   const liquid = visibleColor(here ? (tray.pigment?.color ?? tray.base?.color) : '#ffb347');
   const maxSafe = tray.pigment ? tray.pigment.maxTemp : 100;
   const t = tray.temperature;
@@ -203,7 +204,7 @@ function Heater({ tray, burning }) {
 
 /* ───────── 4. MOLDEADO + ENFRIAMIENTO ───────── */
 function Molder({ tray, active, playing, cooling }) {
-  const here = trayHere(tray, 4);
+  const here = trayHere(tray, STATION.MOLDING);
   const pressing = active && playing && Boolean(tray.shape);
   const frost = tray.temperature <= 30 ? 0.42 : 0.1;
   const gum = tray.pigment?.color ?? tray.base?.color;
@@ -261,7 +262,7 @@ function Molder({ tray, active, playing, cooling }) {
 
 /* ───────── 5. ESCÁNER QA: arco con rayo de luz ───────── */
 function Scanner({ tray, active }) {
-  const scanning = active || tray.station === 5;
+  const scanning = active || tray.station === STATION.QUALITY;
   return (
     <g>
       <rect x="62" y="104" width="76" height="132" fill="url(#gl-beam)" opacity={scanning ? 0.28 : 0.08} style={{ transition: 'opacity .4s' }} />
@@ -289,7 +290,49 @@ function Scanner({ tray, active }) {
   );
 }
 
-const MACHINES = { 1: Formulation, 2: Mixer, 3: Heater, 4: Molder, 5: Scanner };
+/* ───────── 1. HIDRATACIÓN: silo de gelatina con reloj de reposo ───────── */
+function Hydration({ tray, active, playing }) {
+  const waiting = active && playing && Boolean(tray.gellingAgent) && tray.hasLumps === null;
+  const lampColor = tray.hasLumps === null ? '#ffd23f' : tray.hasLumps ? '#ff5a6e' : '#5cf07a';
+  return (
+    <g>
+      {/* silo */}
+      <path d="M50 70H150L136 140H64Z" fill="url(#gl-pink)" stroke="#c23a85" strokeWidth="2.5" strokeLinejoin="round" />
+      <path d="M62 76H76L80 130H72Z" fill="#fff" opacity=".3" />
+      <ellipse cx="100" cy="70" rx="50" ry="10" fill="url(#gl-metal)" stroke="#8f96bd" strokeWidth="2" />
+      <ellipse cx="100" cy="70" rx="43" ry="7" fill="#3b3680" />
+      <path d="M62 70Q80 44 100 42Q122 46 138 70Q100 80 62 70Z" fill="#fff8e1" />
+      <path d="M76 62Q86 50 98 47" stroke="#f1e2b0" strokeWidth="4" strokeLinecap="round" fill="none" />
+      <rect x="86" y="136" width="28" height="14" rx="5" fill="url(#gl-metal)" stroke="#8f96bd" strokeWidth="1.5" />
+      {waiting && [94, 100, 106].map((x, i) => (
+        <circle key={x} className="gl-powder" style={{ animationDelay: `${i * 0.3}s` }} cx={x} cy="152" r="2.4" fill="#fff8e1" stroke="#e0c97a" strokeWidth=".8" />
+      ))}
+
+      {/* cuerpo con reloj */}
+      <rect x="28" y="150" width="144" height="86" rx="18" fill="url(#gl-blue)" stroke="#4455c9" strokeWidth="2.5" />
+      <rect x="38" y="156" width="124" height="7" rx="3.5" fill="#fff" opacity=".35" />
+      <path d="M28 212h144v6a18 18 0 01-18 18H46a18 18 0 01-18-18z" fill="url(#gl-blueD)" />
+      <circle cx="100" cy="192" r="26" fill="#fff" stroke="#8f9bdf" strokeWidth="3" />
+      <circle cx="100" cy="192" r="21" fill="#f3f5ff" />
+      {[0, 90, 180, 270].map((r) => <rect key={r} x="98.5" y="173" width="3" height="6" rx="1.5" fill="#5568e2" transform={`rotate(${r} 100 192)`} />)}
+      <g className={waiting ? 'gl-spin gl-spin--slow' : ''}>
+        <rect x="98.5" y="177" width="3" height="16" rx="1.5" fill="#e0314b" />
+      </g>
+      <circle cx="100" cy="192" r="3.5" fill="#241f58" />
+      <Lamp cx="46" cy="172" c={lampColor} r="6" blink={waiting} />
+      <Lamp cx="154" cy="172" c="#5cf07a" r="4.5" blink />
+    </g>
+  );
+}
+
+const MACHINES = {
+  [STATION.HYDRATION]: Hydration,
+  [STATION.FORMULATION]: Formulation,
+  [STATION.MIXING]: Mixer,
+  [STATION.HEATING]: Heater,
+  [STATION.MOLDING]: Molder,
+  [STATION.QUALITY]: Scanner,
+};
 
 /** Una máquina ilustrada. `active` = la bandeja está en esta estación. */
 export function Machine({ id, ...props }) {

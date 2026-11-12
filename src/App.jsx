@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { GameProvider, useGame } from './context/GameContext';
 import { useGameLoop } from './hooks/useGameLoop';
 import ConveyorBelt from './components/layout/ConveyorBelt';
+import HydrationStation from './components/stations/HydrationStation';
 import FormulationStation from './components/stations/FormulationStation';
 import MixerStation from './components/stations/MixerStation';
 import HeatingStation from './components/stations/HeatingStation';
@@ -11,6 +12,7 @@ import TimeUpModal from './components/layout/TimeUpModal';
 import ResultsModal from './components/layout/ResultsModal';
 import Gummy from './components/entities/Gummy';
 import { ArrowIcon, PauseIcon, PlayIcon, SpinIcon, StarIcon } from './components/entities/Icons';
+import { STATION, FIRST_STATION, LAST_STATION } from './constants/stations';
 import ingredientsData from './data/ingredients.json';
 
 const formatTime = (seconds) => {
@@ -31,7 +33,7 @@ function GameBoard() {
   useGameLoop();
   const {
     isPlaying, setIsPlaying, activeOrders, activeTray, score, totalOrders, gameFinished,
-    advanceConveyor, retreatConveyor, restartGame,
+    advanceConveyor, retreatConveyor, restartGame, runId,
   } = useGame();
   const current = activeOrders[0];
   const currentInfo = current ? describeOrder(current) : null;
@@ -45,12 +47,12 @@ function GameBoard() {
   const confirmRestart = () => { setConfirming(false); restartGame(); };
 
   // Pedido caducado: el reloj del pedido activo llegó a 0
-  const orderExpired = Boolean(current) && current.timeRemaining <= 0 && activeTray.station < 5;
+  const orderExpired = Boolean(current) && current.timeRemaining <= 0 && activeTray.station < LAST_STATION;
 
-  // Reglas de la cinta: ← no baja de la estación 1; se bloquean en pausa, en QA (5), con alertas y al terminar
+  // Reglas de la cinta: ← no baja de la primera estación; se bloquean en pausa, en QA, con alertas y al terminar
   const blocked = gameFinished || orderExpired || confirming;
-  const canAdvance = isPlaying && activeTray.station < 5 && !blocked;
-  const canRetreat = isPlaying && activeTray.station > 1 && activeTray.station < 5 && !blocked;
+  const canAdvance = isPlaying && activeTray.station < LAST_STATION && !blocked;
+  const canRetreat = isPlaying && activeTray.station > FIRST_STATION && activeTray.station < LAST_STATION && !blocked;
 
   // Atajo de teclado: flechas ← → (misma lógica que los botones)
   useEffect(() => {
@@ -130,7 +132,7 @@ function GameBoard() {
       <main className="flex-1 min-h-0 flex flex-col relative">
         <ConveyorBelt />
 
-        {!isPlaying && !confirming && !gameFinished && activeTray.station < 5 && (
+        {!isPlaying && !confirming && !gameFinished && activeTray.station < LAST_STATION && (
           <div className="gl-hint">¡Pulsa «INICIAR TURNO» para arrancar la fábrica!</div>
         )}
 
@@ -157,12 +159,13 @@ function GameBoard() {
       {/* ZONA 3: Panel de Control Dinámico */}
       <footer className="gl-dock">
         <div className="h-full">
-          {activeTray.station === 1 && <FormulationStation />}
-          {activeTray.station === 2 && <MixerStation />}
-          {activeTray.station === 3 && <HeatingStation />}
-          {activeTray.station === 4 && <MoldingStation />}
-          {/* La estación 5 (QA) es modal ahora */}
-          {activeTray.station >= 5 && (
+          {activeTray.station === STATION.HYDRATION && <HydrationStation key={runId} />}
+          {activeTray.station === STATION.FORMULATION && <FormulationStation />}
+          {activeTray.station === STATION.MIXING && <MixerStation />}
+          {activeTray.station === STATION.HEATING && <HeatingStation />}
+          {activeTray.station === STATION.MOLDING && <MoldingStation />}
+          {/* La última estación (QA) es modal */}
+          {activeTray.station >= LAST_STATION && (
             <div className="gl-panel items-center justify-center">
               <h2 className="gl-panel__title" style={{ fontSize: '1.8rem', opacity: 0.55 }}>ESPERANDO REINICIO...</h2>
             </div>
@@ -171,7 +174,7 @@ function GameBoard() {
       </footer>
 
       {/* PANTALLA DE CONTROL DE CALIDAD SUPERPUESTA (MODAL) */}
-      {!gameFinished && !orderExpired && activeTray.station === 5 && (
+      {!gameFinished && !orderExpired && activeTray.station === STATION.QUALITY && (
         <div className="gl-modal">
           <QualityControlStation />
         </div>

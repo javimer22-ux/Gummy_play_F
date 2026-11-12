@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { useGame } from '../context/GameContext';
+import { LAST_STATION } from '../constants/stations';
 
 export const useGameLoop = () => {
   const { isPlaying, activeOrders, setActiveOrders, activeTray } = useGame();
@@ -8,9 +9,9 @@ export const useGameLoop = () => {
   const lastTickRef = useRef(Date.now());
 
   useEffect(() => {
-    // Se detiene si el juego está pausado, no quedan pedidos, estamos en la pantalla de QA (estación 5)
+    // Se detiene si el juego está pausado, no quedan pedidos, estamos en la pantalla de QA (última estación)
     // o el pedido activo se quedó sin tiempo (lo gestiona la alerta de tiempo agotado)
-    if (!isPlaying || activeOrders.length === 0 || activeTray.station >= 5 || orderTimeLeft <= 0) {
+    if (!isPlaying || activeOrders.length === 0 || activeTray.station >= LAST_STATION || orderTimeLeft <= 0) {
       // Actualizamos la referencia para que no haya "saltos" de tiempo al despausar
       lastTickRef.current = Date.now();
       return;

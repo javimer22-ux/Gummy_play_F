@@ -35,8 +35,8 @@ export default function MoldingStation() {
   return (
     <div className="gl-panel">
       <div className="gl-panel__head">
-        <span className="gl-panel__num" style={{ '--n1': '#ffc16b', '--n2': '#f27a14' }}>4</span>
-        <h2 className="gl-panel__title">04. MOLDEADO Y ENFRIAMIENTO</h2>
+        <span className="gl-panel__num" style={{ '--n1': '#ffc16b', '--n2': '#f27a14' }}>5</span>
+        <h2 className="gl-panel__title">05. MOLDEADO Y ENFRIAMIENTO</h2>
       </div>
 
       <div className="gl-panel__body">

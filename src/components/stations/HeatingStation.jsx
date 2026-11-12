@@ -40,8 +40,8 @@ export default function HeatingStation() {
   return (
     <div className="gl-panel">
       <div className="gl-panel__head">
-        <span className="gl-panel__num" style={{ '--n1': '#ff9aa8', '--n2': '#e0314b' }}>3</span>
-        <h2 className="gl-panel__title">03. MARMITA TÉRMICA (CALOR)</h2>
+        <span className="gl-panel__num" style={{ '--n1': '#ff9aa8', '--n2': '#e0314b' }}>4</span>
+        <h2 className="gl-panel__title">04. MARMITA TÉRMICA (CALOR)</h2>
       </div>
 
       <div className="gl-panel__body">

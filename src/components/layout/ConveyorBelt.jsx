@@ -3,6 +3,7 @@ import { useGame } from '../../context/GameContext';
 import FactoryBackdrop from '../entities/FactoryBackdrop';
 import { Machine, MachineDefs } from '../entities/Machines';
 import Tray from '../entities/Tray';
+import { STATION, LAST_STATION } from '../../constants/stations';
 
 /** 'up' | 'down' | 'flat': hacia dónde se movió un valor (se apaga solo si deja de cambiar). */
 function useTrend(value) {
@@ -22,21 +23,23 @@ export default function ConveyorBelt() {
   const { isPlaying, activeTray } = useGame();
 
   const stations = [
-    { id: 1, name: 'FORMULACIÓN' },
-    { id: 2, name: 'MEZCLADORA' },
-    { id: 3, name: 'MARMITA' },
-    { id: 4, name: 'MOLDEADO' },
-    { id: 5, name: 'ESCÁNER QA' },
+    { id: STATION.HYDRATION, name: 'HIDRATACIÓN' },
+    { id: STATION.FORMULATION, name: 'FORMULACIÓN' },
+    { id: STATION.MIXING, name: 'MEZCLADO' },
+    { id: STATION.HEATING, name: 'COCCIÓN' },
+    { id: STATION.MOLDING, name: 'MOLDEADO' },
+    { id: STATION.QUALITY, name: 'CONTROL DE CALIDAD' },
   ];
+  const N = stations.length;
 
-  // Posición de la bandeja: centro de cada columna (20% por estación)
-  const getTrayPosition = () => `${(activeTray.station - 1) * 20 + 10}%`;
+  // Posición de la bandeja: centro de su columna
+  const getTrayPosition = () => `${(activeTray.station - 1) * (100 / N) + 50 / N}%`;
 
-  const isBeltMoving = isPlaying && activeTray.station < 5;
+  const isBeltMoving = isPlaying && activeTray.station < LAST_STATION;
 
   // Color visual de la mezcla en la cinta
   const getRenderColor = () => {
-    if (activeTray.pigment && activeTray.station >= 2) return activeTray.pigment.color;
+    if (activeTray.pigment && activeTray.station >= STATION.MIXING) return activeTray.pigment.color;
     if (activeTray.base) return activeTray.base.color;
     return 'transparent';
   };
@@ -50,9 +53,9 @@ export default function ConveyorBelt() {
   }, [activeTray.station]);
 
   const tempTrend = useTrend(activeTray.temperature);
-  const burning = activeTray.station === 3 && (tempTrend === 'up' || activeTray.temperature >= 120);
-  const cooling = activeTray.station === 4 && tempTrend === 'down';
-  const burst = `${activeTray.base?.id ?? ''}${activeTray.gellingAgent?.id ?? ''}`;
+  const burning = activeTray.station === STATION.HEATING && (tempTrend === 'up' || activeTray.temperature >= 120);
+  const cooling = activeTray.station === STATION.MOLDING && tempTrend === 'down';
+  const burst = activeTray.base?.id ?? '';
 
   const beltClass = isBeltMoving ? (transit ? 'is-fast' : 'is-slow') : '';
 
@@ -64,13 +67,13 @@ export default function ConveyorBelt() {
 
       <div className="gl-line">
         {/* Máquinas */}
-        <div className="gl-machines">
+        <div className="gl-machines" style={{ '--gl-cols': N }}>
           {stations.map((s) => (
             <div key={s.id} className="gl-machine-slot">
               <Machine
                 id={s.id} tray={activeTray} playing={isPlaying}
                 active={activeTray.station === s.id}
-                burst={s.id === 1 ? burst : undefined}
+                burst={s.id === STATION.FORMULATION ? burst : undefined}
                 burning={burning} cooling={cooling}
               />
             </div>
@@ -89,7 +92,7 @@ export default function ConveyorBelt() {
         </div>
 
         {/* Letreros de estación */}
-        <div className="gl-labels">
+        <div className="gl-labels" style={{ '--gl-cols': N }}>
           {stations.map((s) => (
             <span key={s.id} className={`gl-label ${activeTray.station === s.id ? 'is-current' : ''}`}>
               <b>{s.id}</b>{s.name}

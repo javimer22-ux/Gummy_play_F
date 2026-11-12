@@ -8,7 +8,7 @@
       "pigment": "p1",
       "shape": "cuadrado"
     },
-    "timeLimit": 50,
+    "timeLimit": 90,
     "reward": 150
   },
   {
@@ -20,7 +20,7 @@
       "pigment": "p2",
       "shape": "osito"
     },
-    "timeLimit": 50,
+    "timeLimit": 120,
     "reward": 200
   },
   {
@@ -32,7 +32,7 @@
       "pigment": "p3",
       "shape": "estrella"
     },
-    "timeLimit": 50,
+    "timeLimit": 100,
     "reward": 175
   },
   {
@@ -44,7 +44,7 @@
       "pigment": "p1",
       "shape": "osito"
     },
-    "timeLimit": 50,
+    "timeLimit": 110,
     "reward": 225
   },
   {
@@ -56,7 +56,7 @@
       "pigment": "p2",
       "shape": "estrella"
     },
-    "timeLimit": 50,
+    "timeLimit": 120,
     "reward": 250
   }
 ]

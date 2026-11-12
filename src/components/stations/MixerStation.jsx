@@ -21,8 +21,8 @@ export default function MixerStation() {
   return (
     <div className="gl-panel">
       <div className="gl-panel__head">
-        <span className="gl-panel__num" style={{ '--n1': '#d2b3ff', '--n2': '#8b4fe8' }}>2</span>
-        <h2 className="gl-panel__title">02. PANEL DE COLORACIÓN Y MEZCLADO</h2>
+        <span className="gl-panel__num" style={{ '--n1': '#d2b3ff', '--n2': '#8b4fe8' }}>3</span>
+        <h2 className="gl-panel__title">03. PANEL DE COLORACIÓN Y MEZCLADO</h2>
       </div>
 
       <div className="gl-panel__body">
