@@ -5,8 +5,9 @@ export const STATION = {
   FORMULATION: 2, // Base / endulzante
   MIXING: 3,      // Pigmento y agitado
   HEATING: 4,     // Marmita
-  MOLDING: 5,     // Moldeado y enfriamiento
-  QUALITY: 6,     // Control de calidad
+  MOLDING: 5,     // Moldeado (elegir la forma)
+  COOLING: 6,     // Enfriamiento (túnel de frío y gelificación)
+  QUALITY: 7,     // Control de calidad
 };
 
 export const FIRST_STATION = STATION.HYDRATION;

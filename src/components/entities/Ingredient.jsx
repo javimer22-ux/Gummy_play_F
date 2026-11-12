@@ -72,6 +72,22 @@ function Jar({ kind }) {
 }
 
 const BADGES = {
+  limon: (
+    <g>
+      <ellipse cx="40" cy="66" rx="13" ry="10.5" fill="#f2c80f" stroke="#fff" strokeWidth="1.5" />
+      <ellipse cx="40" cy="66" rx="10" ry="7.8" fill="#fff27a" />
+      <path d="M40 58.5v15M30.5 66h19M33.5 60.5l13 11M46.5 60.5l-13 11" stroke="#fffbd0" strokeWidth="1.5" />
+      <path d="M26.5 66l-3 0M53.5 66l3 0" stroke="#f2c80f" strokeWidth="3" strokeLinecap="round" />
+    </g>
+  ),
+  mandarina: (
+    <g>
+      <path d="M40 55q-1-4 4-6q1 4-4 6z" fill="#22c55e" stroke="#fff" strokeWidth="1" />
+      <ellipse cx="40" cy="67" rx="12.5" ry="10.5" fill="#ff8a1f" stroke="#fff" strokeWidth="1.5" />
+      <ellipse cx="40" cy="67" rx="9.5" ry="7.8" fill="#ffc46b" />
+      <path d="M40 59.5v15M31 67h18M33.8 61.6l12.4 10.8M46.2 61.6L33.8 72.4" stroke="#fff0cf" strokeWidth="1.5" />
+    </g>
+  ),
   pitahaya: (
     <g>
       <path d="M40 52l-3-5M40 52l3-5M33 55l-5-3M47 55l5-3" stroke="#22c55e" strokeWidth="3" strokeLinecap="round" />
@@ -121,7 +137,9 @@ export function IngredientArt({ id, color, size = 60 }) {
     case 'g1': art = <Jar kind="gel" />; break;
     case 'p1': art = <Bottle color={color} badge="pitahaya" />; break;
     case 'p2': art = <Bottle color={color} badge="cafe" />; break;
-    case 'p3': art = <Bottle color={color} badge="citrico" />; break;
+    case 'p3': art = <Bottle color={color} badge="limon" />; break;
+    case 'p4': art = <Bottle color={color} badge="citrico" />; break;
+    case 'p5': art = <Bottle color={color} badge="mandarina" />; break;
     default: art = <Bottle color={color} />; break;
   }
   return <span style={{ width: size * 0.8, height: size, display: 'inline-block' }}>{art}</span>;

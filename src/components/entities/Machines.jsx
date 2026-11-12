@@ -202,11 +202,10 @@ function Heater({ tray, burning }) {
   );
 }
 
-/* ───────── 4. MOLDEADO + ENFRIAMIENTO ───────── */
-function Molder({ tray, active, playing, cooling }) {
+/* ───────── 5. MOLDEADO: pistón + matriz ───────── */
+function Molder({ tray, active, playing }) {
   const here = trayHere(tray, STATION.MOLDING);
   const pressing = active && playing && Boolean(tray.shape);
-  const frost = tray.temperature <= 30 ? 0.42 : 0.1;
   const gum = tray.pigment?.color ?? tray.base?.color;
   return (
     <g>
@@ -221,6 +220,39 @@ function Molder({ tray, active, playing, cooling }) {
         <rect x="94" y="32" width="12" height="40" rx="5" fill="url(#gl-metal)" stroke="#8f96bd" strokeWidth="1.5" />
         <rect x="74" y="64" width="52" height="16" rx="8" fill="url(#gl-gold)" stroke="#d98a0c" strokeWidth="2" />
       </g>
+
+      {/* ventana con molde */}
+      <rect x="42" y="96" width="116" height="92" rx="14" fill="#1f2a78" stroke="#fff" strokeWidth="3" />
+      <rect x="48" y="102" width="104" height="80" rx="10" fill="url(#gl-dark)" />
+      <rect x="62" y="146" width="76" height="30" rx="12" fill="#d3d9ff" stroke="#8f9bdf" strokeWidth="2.5" />
+      {tray.shape ? (
+        <g className={here ? 'gl-jelly' : ''}>
+          <Gummy shape={tray.shape} color={here ? gum : '#b7c2ff'} size={52} x="74" y="108" shadow={false} />
+        </g>
+      ) : (
+        [78, 100, 122].map((x) => <ellipse key={x} cx={x} cy="162" rx="9" ry="7" fill="#9aa6ee" />)
+      )}
+      <path d="M56 110L86 106M56 122L70 118" stroke="#fff" strokeWidth="4" strokeLinecap="round" opacity=".6" />
+
+      {/* insignia y rejillas */}
+      <rect x="78" y="86" width="44" height="22" rx="11" fill="url(#gl-gold)" stroke="#d98a0c" strokeWidth="2" />
+      {[90, 100, 110].map((x) => <circle key={x} cx={x} cy="97" r="3" fill="#fff" />)}
+      {[196, 207, 218].map((y) => <rect key={y} x="62" y={y} width="76" height="5" rx="2.5" fill="#241f58" opacity=".55" />)}
+      <Lamp cx="40" cy="196" c="#ffc928" r="4.5" blink /><Lamp cx="160" cy="196" c={pressing ? '#5cf07a' : '#ff5a6e'} r="4.5" />
+    </g>
+  );
+}
+
+/* ───────── 6. ENFRIAMIENTO: túnel de frío con turbinas ───────── */
+function Cooler({ tray, cooling }) {
+  const here = trayHere(tray, STATION.COOLING);
+  const frost = tray.temperature <= 30 ? 0.42 : 0.1;
+  const gum = tray.pigment?.color ?? tray.base?.color;
+  return (
+    <g>
+      <rect x="24" y="84" width="152" height="152" rx="20" fill="url(#gl-teal)" stroke="#1b8f96" strokeWidth="2.5" />
+      <rect x="34" y="90" width="132" height="7" rx="3.5" fill="#fff" opacity=".35" />
+      <path d="M24 214h152v2a20 20 0 01-20 20H44a20 20 0 01-20-20z" fill="#25aab2" opacity=".7" />
 
       {/* ventana helada con molde */}
       <rect x="42" y="96" width="116" height="92" rx="14" fill="#1f2a78" stroke="#fff" strokeWidth="3" />
@@ -239,11 +271,12 @@ function Molder({ tray, active, playing, cooling }) {
         <path key={x} className="gl-twinkle" style={{ animationDelay: `${i * 0.2}s` }} d={`M${x} ${120 + (i % 2) * 24} l2 5 5 2 -5 2 -2 5 -2 -5 -5 -2 5 -2z`} fill="#fff" />
       ))}
 
-      {/* insignia de copo de nieve */}
-      <rect x="78" y="86" width="44" height="22" rx="11" fill="url(#gl-teal)" stroke="#1b8f96" strokeWidth="2" />
-      <g transform="translate(88 87) scale(.8)" className={cooling ? 'gl-spin' : ''}>
+      {/* copo de nieve */}
+      <rect x="78" y="56" width="44" height="26" rx="13" fill="url(#gl-blue)" stroke="#4455c9" strokeWidth="2" />
+      <g transform="translate(88 58) scale(.8)" className={cooling ? 'gl-spin' : ''}>
         <g stroke="#fff" strokeWidth="2.2" strokeLinecap="round" fill="none"><path d="M12 2v20M3.3 7l17.4 10M20.7 7L3.3 17" /></g>
       </g>
+      <rect x="92" y="30" width="16" height="28" rx="6" fill="url(#gl-metal)" stroke="#8f96bd" strokeWidth="1.5" />
 
       {/* turbinas */}
       {[68, 132].map((cx) => (
@@ -331,6 +364,7 @@ const MACHINES = {
   [STATION.MIXING]: Mixer,
   [STATION.HEATING]: Heater,
   [STATION.MOLDING]: Molder,
+  [STATION.COOLING]: Cooler,
   [STATION.QUALITY]: Scanner,
 };
 

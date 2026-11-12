@@ -1,15 +1,15 @@
 [
   {
     "id": "ORD-001",
-    "title": "Gomitas Rojas de Pitahaya",
-    "description": "Cuidado con la temperatura: Las betalaínas se degradan a más de 40°C.",
+    "title": "Tucanes Chocó de Mandarina",
+    "description": "Pedido del Chocó: ralladura de mandarina, azúcar blanca y molde de tucán.",
     "targetSpecs": {
-      "sweetener": "b2",
-      "pigment": "p1",
-      "shape": "cuadrado"
+      "sweetener": "b3",
+      "pigment": "p5",
+      "shape": "tucan"
     },
-    "timeLimit": 90,
-    "reward": 150
+    "timeLimit": 115,
+    "reward": 240
   },
   {
     "id": "ORD-002",
@@ -58,5 +58,89 @@
     },
     "timeLimit": 120,
     "reward": 250
+  },
+  {
+    "id": "ORD-006",
+    "title": "Ranas de Cristal de Limón",
+    "description": "Ralladura de limón y azúcar blanca. El carotenoide aguanta el calor, pero desmolda en la zona justa de frío.",
+    "targetSpecs": {
+      "sweetener": "b3",
+      "pigment": "p3",
+      "shape": "rana"
+    },
+    "timeLimit": 110,
+    "reward": 220
+  },
+  {
+    "id": "ORD-007",
+    "title": "Estrellas de Naranja",
+    "description": "Usa ralladura de naranja con panela. Agita hasta el 100% antes de moldear.",
+    "targetSpecs": {
+      "sweetener": "b2",
+      "pigment": "p4",
+      "shape": "estrella"
+    },
+    "timeLimit": 100,
+    "reward": 180
+  },
+  {
+    "id": "ORD-008",
+    "title": "Gomitas Rojas de Pitahaya",
+    "description": "Cuidado con la temperatura: Las betalaínas se degradan a más de 40°C.",
+    "targetSpecs": {
+      "sweetener": "b2",
+      "pigment": "p1",
+      "shape": "cuadrado"
+    },
+    "timeLimit": 90,
+    "reward": 150
+  },
+  {
+    "id": "ORD-009",
+    "title": "Osos de Anteojos de Café",
+    "description": "Restos de café con panela en el molde del oso andino. Requiere buena homogeneización.",
+    "targetSpecs": {
+      "sweetener": "b2",
+      "pigment": "p2",
+      "shape": "oso"
+    },
+    "timeLimit": 120,
+    "reward": 260
+  },
+  {
+    "id": "ORD-010",
+    "title": "Ranas de Cristal de Naranja",
+    "description": "Ralladura de naranja con panela. Cuidado: pasarse de frío cristaliza la gelatina.",
+    "targetSpecs": {
+      "sweetener": "b2",
+      "pigment": "p4",
+      "shape": "rana"
+    },
+    "timeLimit": 115,
+    "reward": 250
+  },
+  {
+    "id": "ORD-011",
+    "title": "Tucanes Chocó de Pitahaya",
+    "description": "Betalaínas: no pases de 40°C. Azúcar blanca y molde de tucán.",
+    "targetSpecs": {
+      "sweetener": "b3",
+      "pigment": "p1",
+      "shape": "tucan"
+    },
+    "timeLimit": 120,
+    "reward": 270
+  },
+  {
+    "id": "ORD-012",
+    "title": "Osos de Anteojos de Mandarina",
+    "description": "Pedido final cítrico: mandarina, panela y oso de anteojos.",
+    "targetSpecs": {
+      "sweetener": "b2",
+      "pigment": "p5",
+      "shape": "oso"
+    },
+    "timeLimit": 120,
+    "reward": 280
   }
 ]

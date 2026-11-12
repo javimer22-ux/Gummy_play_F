@@ -1,0 +1,26 @@
+[
+  {
+    "id": "cuadrado",
+    "name": "Cuadrado"
+  },
+  {
+    "id": "estrella",
+    "name": "Estrella"
+  },
+  {
+    "id": "osito",
+    "name": "Osito"
+  },
+  {
+    "id": "rana",
+    "name": "Rana de Cristal"
+  },
+  {
+    "id": "tucan",
+    "name": "Tucán Chocó"
+  },
+  {
+    "id": "oso",
+    "name": "Oso de Anteojos"
+  }
+]

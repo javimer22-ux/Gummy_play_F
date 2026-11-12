@@ -1,7 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useGame } from '../../context/GameContext';
 import Gummy from '../entities/Gummy';
+import ingredientsData from '../../data/ingredients.json';
+import shapesData from '../../data/shapes.json';
 import { ArrowIcon, CheckIcon, CrossIcon } from '../entities/Icons';
+
+const shapeName = (id) => shapesData.find((s) => s.id === id)?.name ?? id ?? 'ninguno';
 
 export default function QualityControlStation() {
   const { activeTray, activeOrders, recordResult, nextOrder } = useGame();
@@ -27,19 +31,20 @@ export default function QualityControlStation() {
 
       // 2. Validación de Pigmento
       if (!activeTray.pigment || activeTray.pigment.id !== currentOrder.targetSpecs.pigment) {
-        errors.push(`Pigmento incorrecto. Se solicitó el extracto ${currentOrder.targetSpecs.pigment}.`);
+        errors.push(`Pigmento incorrecto. Se solicitó: ${ingredientsData.pigments.find((p) => p.id === currentOrder.targetSpecs.pigment)?.name ?? currentOrder.targetSpecs.pigment}.`);
         isSuccess = false;
       }
 
-      // 3. Validación de Temperatura (¡Muy Importante!)
-      if (activeTray.pigment) {
-        // La temperatura actual no debe superar el máximo permitido por el pigmento
-        // NOTA: Como la gomita debe llegar fría, evaluamos si en algún momento se "quemó" (Idealmente tendríamos un registro histórico en el state, pero por ahora evaluamos si llegó hirviendo)
-        if (activeTray.temperature > 30) {
-           errors.push(`Choque térmico fallido. La gomita llegó caliente al molde (${Math.floor(activeTray.temperature)}°C) y no gelificó.`);
-           isSuccess = false;
-        }
-        // Asumimos que si está quemada/derretida, su mixLevel baja o su forma se pierde
+      // 3. Validación de Gelificación (textura resultante de la Estación de Enfriamiento)
+      if (activeTray.finalTexture === 'frozen') {
+        errors.push('Gelificación fallida. La gelatina se cristalizó por exceso de frío.');
+        isSuccess = false;
+      } else if (activeTray.finalTexture === 'melted') {
+        errors.push('Gelificación fallida. La gomita seguía líquida al desmoldar.');
+        isSuccess = false;
+      } else if (activeTray.finalTexture !== 'perfect') {
+        errors.push('Gelificación incompleta. El lote no se desmoldó en el túnel de frío.');
+        isSuccess = false;
       }
 
       // 4. Validación de Mezcla
@@ -50,7 +55,7 @@ export default function QualityControlStation() {
 
       // 5. Validación de Forma
       if (activeTray.shape !== currentOrder.targetSpecs.shape) {
-        errors.push(`Molde incorrecto. Usaste ${activeTray.shape}, se pedía ${currentOrder.targetSpecs.shape}.`);
+        errors.push(`Molde incorrecto. Usaste ${shapeName(activeTray.shape)}, se pedía ${shapeName(currentOrder.targetSpecs.shape)}.`);
         isSuccess = false;
       }
 

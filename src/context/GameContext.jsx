@@ -12,14 +12,15 @@ const freshOrders = () => ordersData.map(o => ({ ...o, timeRemaining: o.timeLimi
 const GELATIN = ingredientsData.gellingAgents[0];
 
 const EMPTY_TRAY = {
-  station: FIRST_STATION, // ver src/constants/stations.js (1=Hidratación ... 6=QA)
+  station: FIRST_STATION, // ver src/constants/stations.js (1=Hidratación ... 7=QA)
   hasLumps: null, // Hidratación: null = aún sin hidratar | true = grumos | false = gelatina hidratada correctamente
   gellingAgent: null, // Gelatina sin sabor (la coloca la Estación de Hidratación)
   base: null, // Agua purificada / Endulzante
   pigment: null, // Pitahaya, Café o Cítricos
   mixLevel: 0, // Porcentaje de mezcla (0 a 100)
   temperature: 20, // Temperatura inicial
-  shape: null // Molde
+  shape: null, // Molde (lo fija la Estación de Moldeado)
+  finalTexture: null // Enfriamiento: null = sin desmoldar | 'perfect' | 'frozen' | 'melted'
 };
 
 export const GameProvider = ({ children }) => {

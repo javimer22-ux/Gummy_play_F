@@ -1,14 +1,29 @@
 {
   "bases": [
-    { "id": "b1", "name": "Agua purificada", "type": "solvente", "color": "transparent" },
-    { "id": "b2", "name": "Endulzante: Panela local", "type": "edulcorante", "color": "#b45309" },
-    { "id": "b3", "name": "Endulzante: Azúcar blanca", "type": "edulcorante", "color": "#f3f4f6" }
+    {
+      "id": "b1",
+      "name": "Agua ",
+      "type": "solvente",
+      "color": "transparent"
+    },
+    {
+      "id": "b2",
+      "name": "Endulzante: Panela local",
+      "type": "edulcorante",
+      "color": "#b45309"
+    },
+    {
+      "id": "b3",
+      "name": "Endulzante: Azúcar blanca",
+      "type": "edulcorante",
+      "color": "#f3f4f6"
+    }
   ],
   "gellingAgents": [
-    { 
-      "id": "g1", 
-      "name": "Gelatina sin sabor", 
-      "activationTemp": 60, 
+    {
+      "id": "g1",
+      "name": "Gelatina sin sabor",
+      "activationTemp": 60,
       "degradationTemp": 95
     }
   ],
@@ -31,9 +46,34 @@
     },
     {
       "id": "p3",
-      "name": "Ralladura de Cítricos",
+      "name": "Ralladura de Limón",
       "compound": "Carotenoides",
       "color": "#eab308",
+      "maxTemp": 90,
+      "preparation": "Extracción acuosa",
+      "variant": "Limón",
+      "group": "citricos",
+      "groupName": "Cascara de Cítricos"
+    },
+    {
+      "id": "p4",
+      "name": "Ralladura de Naranja",
+      "variant": "Naranja",
+      "group": "citricos",
+      "groupName": "Ralladura de Cítricos",
+      "compound": "Carotenoides",
+      "color": "#ea580c",
+      "maxTemp": 90,
+      "preparation": "Extracción acuosa"
+    },
+    {
+      "id": "p5",
+      "name": "Ralladura de Mandarina",
+      "variant": "Mandarina",
+      "group": "citricos",
+      "groupName": "Ralladura de Cítricos",
+      "compound": "Carotenoides",
+      "color": "#fb923c",
       "maxTemp": 90,
       "preparation": "Extracción acuosa"
     }

@@ -28,6 +28,7 @@ export default function ConveyorBelt() {
     { id: STATION.MIXING, name: 'MEZCLADO' },
     { id: STATION.HEATING, name: 'COCCIÓN' },
     { id: STATION.MOLDING, name: 'MOLDEADO' },
+    { id: STATION.COOLING, name: 'ENFRIAMIENTO' },
     { id: STATION.QUALITY, name: 'CONTROL DE CALIDAD' },
   ];
   const N = stations.length;
@@ -54,7 +55,7 @@ export default function ConveyorBelt() {
 
   const tempTrend = useTrend(activeTray.temperature);
   const burning = activeTray.station === STATION.HEATING && (tempTrend === 'up' || activeTray.temperature >= 120);
-  const cooling = activeTray.station === STATION.MOLDING && tempTrend === 'down';
+  const cooling = activeTray.station === STATION.COOLING && tempTrend === 'down';
   const burst = activeTray.base?.id ?? '';
 
   const beltClass = isBeltMoving ? (transit ? 'is-fast' : 'is-slow') : '';

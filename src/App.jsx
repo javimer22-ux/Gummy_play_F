@@ -7,6 +7,7 @@ import FormulationStation from './components/stations/FormulationStation';
 import MixerStation from './components/stations/MixerStation';
 import HeatingStation from './components/stations/HeatingStation';
 import MoldingStation from './components/stations/MoldingStation';
+import CoolingStation from './components/stations/CoolingStation';
 import QualityControlStation from './components/stations/QualityControlStation';
 import TimeUpModal from './components/layout/TimeUpModal';
 import ResultsModal from './components/layout/ResultsModal';
@@ -14,6 +15,7 @@ import Gummy from './components/entities/Gummy';
 import { ArrowIcon, PauseIcon, PlayIcon, SpinIcon, StarIcon } from './components/entities/Icons';
 import { STATION, FIRST_STATION, LAST_STATION } from './constants/stations';
 import ingredientsData from './data/ingredients.json';
+import shapesData from './data/shapes.json';
 
 const formatTime = (seconds) => {
   const m = Math.floor(seconds / 60).toString().padStart(2, '0');
@@ -26,7 +28,8 @@ const describeOrder = (order) => {
   const { bases, pigments } = ingredientsData;
   const sweet = bases.find((b) => b.id === order.targetSpecs.sweetener);
   const pig = pigments.find((p) => p.id === order.targetSpecs.pigment);
-  return { sweet, pig };
+  const shapeName = shapesData.find((s) => s.id === order.targetSpecs.shape)?.name ?? order.targetSpecs.shape;
+  return { sweet, pig, shapeName };
 };
 
 function GameBoard() {
@@ -51,7 +54,9 @@ function GameBoard() {
 
   // Reglas de la cinta: ← no baja de la primera estación; se bloquean en pausa, en QA, con alertas y al terminar
   const blocked = gameFinished || orderExpired || confirming;
-  const canAdvance = isPlaying && activeTray.station < LAST_STATION && !blocked;
+  // En Enfriamiento la cinta solo avanza después de DESMOLDAR (así QA siempre recibe una textura)
+  const awaitingDemold = activeTray.station === STATION.COOLING && activeTray.finalTexture === null;
+  const canAdvance = isPlaying && activeTray.station < LAST_STATION && !blocked && !awaitingDemold;
   const canRetreat = isPlaying && activeTray.station > FIRST_STATION && activeTray.station < LAST_STATION && !blocked;
 
   // Atajo de teclado: flechas ← → (misma lógica que los botones)
@@ -107,7 +112,7 @@ function GameBoard() {
                 </div>
                 <p className="font-extrabold leading-tight mt-0.5">{current.title}</p>
                 <p className="gl-ticket__meta">
-                  Molde: {current.targetSpecs.shape} · {currentInfo.pig?.name ?? current.targetSpecs.pigment}
+                  Molde: {currentInfo.shapeName} · {currentInfo.pig?.name ?? current.targetSpecs.pigment}
                   <br />{currentInfo.sweet?.name ?? current.targetSpecs.sweetener}
                 </p>
               </div>
@@ -138,7 +143,7 @@ function GameBoard() {
 
         {/* CONTROL CENTRAL DE LA FÁBRICA: flechas para ir y volver entre estaciones */}
         <div className="gl-strip">
-          <span className="gl-strip__label">MUEVE LA CINTA</span>
+          <span className="gl-strip__label">SIGUIENTE</span>
           <div className="gl-pad">
             <button
               onClick={retreatConveyor} disabled={!canRetreat}
@@ -164,6 +169,7 @@ function GameBoard() {
           {activeTray.station === STATION.MIXING && <MixerStation />}
           {activeTray.station === STATION.HEATING && <HeatingStation />}
           {activeTray.station === STATION.MOLDING && <MoldingStation />}
+          {activeTray.station === STATION.COOLING && <CoolingStation />}
           {/* La última estación (QA) es modal */}
           {activeTray.station >= LAST_STATION && (
             <div className="gl-panel items-center justify-center">

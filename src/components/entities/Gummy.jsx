@@ -49,6 +49,42 @@ function ShapeBody({ shape, fill, stroke, sw }) {
       </g>
     );
   }
+  if (shape === 'rana') {
+    // Rana de Cristal: ojos saltones, cuerpo ancho y patas
+    return (
+      <g {...p}>
+        <circle cx="29" cy="30" r="13" />
+        <circle cx="71" cy="30" r="13" />
+        <ellipse cx="50" cy="56" rx="36" ry="28" />
+        <ellipse cx="20" cy="80" rx="10" ry="8" />
+        <ellipse cx="80" cy="80" rx="10" ry="8" />
+        <ellipse cx="30" cy="90" rx="15" ry="8" />
+        <ellipse cx="70" cy="90" rx="15" ry="8" />
+      </g>
+    );
+  }
+  if (shape === 'tucan') {
+    // Tucán Chocó: cuerpo, cabeza y gran pico hacia la derecha
+    return (
+      <g {...p}>
+        <ellipse cx="38" cy="90" rx="8" ry="11" transform="rotate(-18 38 90)" />
+        <ellipse cx="46" cy="62" rx="25" ry="30" />
+        <circle cx="44" cy="30" r="18" />
+        <path d="M56 20 Q98 12 96 34 Q92 50 56 44 Z" />
+      </g>
+    );
+  }
+  if (shape === 'oso') {
+    // Oso de Anteojos: cabeza redonda con orejas y pecho
+    return (
+      <g {...p}>
+        <circle cx="24" cy="24" r="12" />
+        <circle cx="76" cy="24" r="12" />
+        <circle cx="50" cy="46" r="31" />
+        <ellipse cx="50" cy="83" rx="28" ry="17" />
+      </g>
+    );
+  }
   return <rect x="12" y="22" width="76" height="74" rx="24" {...p} />;
 }
 
@@ -81,11 +117,59 @@ export default function Gummy({
       <g opacity=".35" style={{ mixBlendMode: 'screen' }}>
         {shape === 'estrella' && <ellipse cx="50" cy="84" rx="14" ry="4" fill={shade(base, 0.7)} />}
         {shape === 'osito' && <ellipse cx="50" cy="84" rx="14" ry="4" fill={shade(base, 0.7)} />}
+        {shape === 'rana' && <ellipse cx="50" cy="76" rx="16" ry="4" fill={shade(base, 0.7)} />}
+        {shape === 'tucan' && <ellipse cx="46" cy="84" rx="10" ry="4" fill={shade(base, 0.7)} />}
+        {shape === 'oso' && <ellipse cx="50" cy="93" rx="14" ry="3.5" fill={shade(base, 0.7)} />}
         {(shape === 'cuadrado' || !shape) && <rect x="26" y="84" width="48" height="5" rx="2.5" fill={shade(base, 0.7)} />}
       </g>
 
       {/* detalles de cada figura + brillos especulares */}
-      {shape === 'osito' ? (
+      {shape === 'rana' ? (
+        <g>
+          <circle cx="29" cy="30" r="8" fill="#fff" opacity=".92" />
+          <circle cx="71" cy="30" r="8" fill="#fff" opacity=".92" />
+          <circle cx="30" cy="31" r="4.2" fill={shade(base, -0.7)} />
+          <circle cx="72" cy="31" r="4.2" fill={shade(base, -0.7)} />
+          <circle cx="31.5" cy="29.5" r="1.4" fill="#fff" />
+          <circle cx="73.5" cy="29.5" r="1.4" fill="#fff" />
+          <path d="M36 54 Q50 66 64 54" stroke={shade(base, -0.65)} strokeWidth="3" strokeLinecap="round" fill="none" />
+          {/* vientre de cristal: se ve el corazón */}
+          <ellipse cx="50" cy="72" rx="17" ry="10" fill={shade(base, 0.6)} opacity=".4" />
+          <circle cx="50" cy="72" r="3.2" fill="#ff6b8a" opacity=".85" />
+          <path d="M22 46 Q28 38 38 40" stroke="#fff" strokeWidth="4.5" strokeLinecap="round" fill="none" opacity=".8" />
+          <circle cx="82" cy="52" r="2.2" fill="#fff" opacity=".7" />
+        </g>
+      ) : shape === 'tucan' ? (
+        <g>
+          <ellipse cx="50" cy="68" rx="13" ry="19" fill={shade(base, 0.6)} opacity=".45" />
+          <path d="M60 28 Q90 20 93 32 Q80 38 60 36 Z" fill={shade(base, 0.5)} opacity=".6" />
+          <path d="M57 35 Q80 40 95 33" stroke={shade(base, -0.5)} strokeWidth="2" strokeLinecap="round" fill="none" opacity=".7" />
+          <circle cx="64" cy="27" r="1.6" fill={shade(base, -0.6)} />
+          <circle cx="40" cy="27" r="4.4" fill="#fff" opacity=".92" />
+          <circle cx="41" cy="27.5" r="2.7" fill={shade(base, -0.7)} />
+          <circle cx="41.8" cy="26.6" r=".9" fill="#fff" />
+          <path d="M30 22 Q34 15 44 14" stroke="#fff" strokeWidth="4.5" strokeLinecap="round" fill="none" opacity=".85" />
+          <ellipse cx="34" cy="62" rx="3" ry="7" fill="#fff" opacity=".55" transform="rotate(12 34 62)" />
+        </g>
+      ) : shape === 'oso' ? (
+        <g>
+          <circle cx="24" cy="24" r="6" fill={shade(base, 0.45)} opacity=".6" />
+          <circle cx="76" cy="24" r="6" fill={shade(base, 0.45)} opacity=".6" />
+          {/* anteojos: aros claros alrededor de los ojos */}
+          <circle cx="38" cy="43" r="9.5" fill="none" stroke={shade(base, 0.7)} strokeWidth="3.2" opacity=".9" />
+          <circle cx="62" cy="43" r="9.5" fill="none" stroke={shade(base, 0.7)} strokeWidth="3.2" opacity=".9" />
+          <path d="M47 43 Q50 40 53 43" stroke={shade(base, 0.7)} strokeWidth="3" strokeLinecap="round" fill="none" opacity=".9" />
+          <circle cx="38" cy="43" r="3" fill={shade(base, -0.7)} />
+          <circle cx="62" cy="43" r="3" fill={shade(base, -0.7)} />
+          <circle cx="39" cy="42" r="1" fill="#fff" />
+          <circle cx="63" cy="42" r="1" fill="#fff" />
+          <ellipse cx="50" cy="58" rx="11" ry="8" fill={shade(base, 0.55)} opacity=".8" />
+          <ellipse cx="50" cy="55.5" rx="4" ry="3" fill={shade(base, -0.65)} />
+          <path d="M50 58 V62 M45 63 Q50 66 55 63" stroke={shade(base, -0.65)} strokeWidth="2" strokeLinecap="round" fill="none" />
+          <path d="M39 86 Q50 95 61 86" stroke={shade(base, 0.6)} strokeWidth="4" strokeLinecap="round" fill="none" opacity=".6" />
+          <path d="M32 24 Q36 16 44 18" stroke="#fff" strokeWidth="4.5" strokeLinecap="round" fill="none" opacity=".85" />
+        </g>
+      ) : shape === 'osito' ? (
         <g>
           <circle cx="27" cy="26" r="5" fill={shade(base, 0.45)} opacity=".6" />
           <circle cx="73" cy="26" r="5" fill={shade(base, 0.45)} opacity=".6" />
