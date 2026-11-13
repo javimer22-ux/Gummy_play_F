@@ -1,3 +1,4 @@
+import HelperCharacter from '../HelperCharacter';
 import { useEffect, useState } from 'react';
 import { useGame } from '../../context/GameContext';
 import Gummy from '../entities/Gummy';
@@ -44,6 +45,12 @@ export default function QualityControlStation() {
         isSuccess = false;
       } else if (activeTray.finalTexture !== 'perfect') {
         errors.push('Gelificación incompleta. El lote no se desmoldó en el túnel de frío.');
+        isSuccess = false;
+      }
+
+      // Cocción: lote quemado
+      if (activeTray.burned) {
+        errors.push('Lote quemado. Se pasó de la temperatura segura en la Cocción.');
         isSuccess = false;
       }
 
@@ -129,9 +136,14 @@ export default function QualityControlStation() {
           </ul>
         </div>
 
-        <button onClick={handleNextOrder} className="gl-btn gl-btn--gold gl-btn--xl">
-          {isLastOrder ? 'VER RESULTADOS' : 'SIGUIENTE PEDIDO'} <ArrowIcon size={24} />
-        </button>
+        <div className="mt-3 flex w-full flex-wrap items-center justify-between gap-3 rounded-2xl bg-slate-800/90 px-4 py-3">
+          <div className="min-w-0 flex-1">
+            <HelperCharacter text="¡Es hora de la inspección final! 🏆 Comprueba que cumplan con el pedido." />
+          </div>
+          <button onClick={handleNextOrder} className="gl-btn gl-btn--gold gl-btn--xl">
+            {isLastOrder ? 'VER RESULTADOS' : 'SIGUIENTE PEDIDO'} <ArrowIcon size={24} />
+          </button>
+        </div>
       </div>
     </div>
   );

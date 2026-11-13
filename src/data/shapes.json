@@ -1,26 +1,22 @@
 [
   {
-    "id": "cuadrado",
-    "name": "Cuadrado"
-  },
-  {
-    "id": "estrella",
-    "name": "Estrella"
-  },
-  {
-    "id": "osito",
+    "id": "bear",
     "name": "Osito"
   },
   {
-    "id": "rana",
-    "name": "Rana de Cristal"
-  },
-  {
-    "id": "tucan",
-    "name": "Tucán Chocó"
-  },
-  {
-    "id": "oso",
+    "id": "spectacled_bear",
     "name": "Oso de Anteojos"
+  },
+  {
+    "id": "toucan",
+    "name": "Tucán"
+  },
+  {
+    "id": "worm",
+    "name": "Gusanos"
+  },
+  {
+    "id": "glass_frog",
+    "name": "Rana de Cristal"
   }
 ]

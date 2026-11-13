@@ -1,36 +1,36 @@
 [
   {
     "id": "ORD-001",
-    "title": "Tucanes Chocó de Mandarina",
-    "description": "Pedido del Chocó: ralladura de mandarina, azúcar blanca y molde de tucán.",
+    "title": "Gusanos Rojos de Pitahaya",
+    "description": "Cuidado con la temperatura: Las betalaínas se degradan a más de 40°C.",
     "targetSpecs": {
-      "sweetener": "b3",
-      "pigment": "p5",
-      "shape": "tucan"
+      "sweetener": "b2",
+      "pigment": "p1",
+      "shape": "worm"
     },
-    "timeLimit": 115,
-    "reward": 240
+    "timeLimit": 90,
+    "reward": 150
   },
   {
     "id": "ORD-002",
-    "title": "Gomitas Energéticas de Café",
+    "title": "Ositos Energéticos de Café",
     "description": "Usa restos de café de chuspa. Requiere buena homogeneización.",
     "targetSpecs": {
       "sweetener": "b3",
       "pigment": "p2",
-      "shape": "osito"
+      "shape": "bear"
     },
     "timeLimit": 120,
     "reward": 200
   },
   {
     "id": "ORD-003",
-    "title": "Estrellas Doradas de Cítricos",
-    "description": "Los carotenoides toleran el calor, pero la gomita debe llegar fría al molde.",
+    "title": "Gusanos Dorados de Cítricos",
+    "description": "Los carotenoides toleran el calor, pero la gomita debe llegar fría al molde de gusanos.",
     "targetSpecs": {
       "sweetener": "b3",
       "pigment": "p3",
-      "shape": "estrella"
+      "shape": "worm"
     },
     "timeLimit": 100,
     "reward": 175
@@ -42,19 +42,19 @@
     "targetSpecs": {
       "sweetener": "b3",
       "pigment": "p1",
-      "shape": "osito"
+      "shape": "bear"
     },
     "timeLimit": 110,
     "reward": 225
   },
   {
     "id": "ORD-005",
-    "title": "Estrellas de Café con Panela",
+    "title": "Gusanos de Café con Panela",
     "description": "Pedido final: panela, café y mucha homogeneidad.",
     "targetSpecs": {
       "sweetener": "b2",
       "pigment": "p2",
-      "shape": "estrella"
+      "shape": "worm"
     },
     "timeLimit": 120,
     "reward": 250
@@ -66,34 +66,34 @@
     "targetSpecs": {
       "sweetener": "b3",
       "pigment": "p3",
-      "shape": "rana"
+      "shape": "glass_frog"
     },
     "timeLimit": 110,
     "reward": 220
   },
   {
     "id": "ORD-007",
-    "title": "Estrellas de Naranja",
+    "title": "Gusanos de Naranja",
     "description": "Usa ralladura de naranja con panela. Agita hasta el 100% antes de moldear.",
     "targetSpecs": {
       "sweetener": "b2",
       "pigment": "p4",
-      "shape": "estrella"
+      "shape": "worm"
     },
     "timeLimit": 100,
     "reward": 180
   },
   {
     "id": "ORD-008",
-    "title": "Gomitas Rojas de Pitahaya",
-    "description": "Cuidado con la temperatura: Las betalaínas se degradan a más de 40°C.",
+    "title": "Tucanes Chocó de Mandarina",
+    "description": "Pedido del Chocó: ralladura de mandarina, azúcar blanca y molde de tucán.",
     "targetSpecs": {
-      "sweetener": "b2",
-      "pigment": "p1",
-      "shape": "cuadrado"
+      "sweetener": "b3",
+      "pigment": "p5",
+      "shape": "toucan"
     },
-    "timeLimit": 90,
-    "reward": 150
+    "timeLimit": 115,
+    "reward": 240
   },
   {
     "id": "ORD-009",
@@ -102,7 +102,7 @@
     "targetSpecs": {
       "sweetener": "b2",
       "pigment": "p2",
-      "shape": "oso"
+      "shape": "spectacled_bear"
     },
     "timeLimit": 120,
     "reward": 260
@@ -114,7 +114,7 @@
     "targetSpecs": {
       "sweetener": "b2",
       "pigment": "p4",
-      "shape": "rana"
+      "shape": "glass_frog"
     },
     "timeLimit": 115,
     "reward": 250
@@ -126,7 +126,7 @@
     "targetSpecs": {
       "sweetener": "b3",
       "pigment": "p1",
-      "shape": "tucan"
+      "shape": "toucan"
     },
     "timeLimit": 120,
     "reward": 270
@@ -138,7 +138,7 @@
     "targetSpecs": {
       "sweetener": "b2",
       "pigment": "p5",
-      "shape": "oso"
+      "shape": "spectacled_bear"
     },
     "timeLimit": 120,
     "reward": 280

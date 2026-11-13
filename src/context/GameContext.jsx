@@ -20,6 +20,7 @@ const EMPTY_TRAY = {
   mixLevel: 0, // Porcentaje de mezcla (0 a 100)
   temperature: 20, // Temperatura inicial
   shape: null, // Molde (lo fija la Estación de Moldeado)
+  burned: false, // Cocción: true si se pasó de la temperatura segura
   finalTexture: null // Enfriamiento: null = sin desmoldar | 'perfect' | 'frozen' | 'melted'
 };
 

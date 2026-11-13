@@ -1,137 +1,131 @@
 import { useState, useEffect } from 'react';
 import { useGame } from '../../context/GameContext';
-import { SnowIcon } from '../entities/Icons';
+import Gummy, { visibleColor } from '../entities/Gummy';
+import HelperCharacter from '../HelperCharacter';
+import ZoomShell, { INK, Pipe } from '../layout/ZoomShell';
 
-// Estación 6: túnel de frío. Se enfría la gelatina y se desmolda en el punto justo.
-const START_TEMP = 40;   // °C al entrar al túnel
-const MIN_TEMP = -10;    // el túnel no baja de aquí
-const TICK_MS = 150;     // cada tick el túnel resta 1°C (≈ 6,7°C por segundo)
+// Estación 6: SOLO enfriamiento (minijuego térmico). Desmolda en el punto justo.
+const START_TEMP = 40;  // °C al entrar al túnel
+const MIN_TEMP = -10;   // el túnel no baja de aquí
+const TICK_MS = 150;    // cada tick resta 1°C (~6,7°C/s)
 
-// Escala visual del termómetro
-const SCALE_MIN = -10;
-const SCALE_MAX = 40;
-const pct = (t) => ((Math.min(SCALE_MAX, Math.max(SCALE_MIN, t)) - SCALE_MIN) / (SCALE_MAX - SCALE_MIN)) * 100;
-
-// Gelificación: 4–10°C perfecta | más de 10°C sigue líquida | por debajo (hielo) se cristaliza
-const evaluateTexture = (t) => {
-  if (t > 10) return 'melted';
-  if (t >= 4) return 'perfect';
-  return 'frozen';
-};
-
+// 4–10°C perfecta | >10°C sigue líquida | por debajo de 4°C (hasta 0°C o menos) se cristaliza
+const evaluateTexture = (t) => (t > 10 ? 'melted' : t >= 4 ? 'perfect' : 'frozen');
 const RESULTS = {
-  perfect: { text: '¡Gelificación exitosa!', color: '#1d8a37' },
-  frozen: { text: 'Se cristalizó la gelatina', color: '#3f6fe6' },
-  melted: { text: 'Sigue líquida', color: '#e0314b' },
+  perfect: { cls: 'ok', text: '¡Gelificación exitosa!' },
+  frozen: { cls: 'bad', text: 'Se cristalizó la gelatina' },
+  melted: { cls: 'bad', text: 'Sigue líquida' },
 };
+
+/* Túnel de frío industrial con bandeja, ventiladores, escarcha y humo frío */
+function Tunnel({ temp, on, shape, color }) {
+  const cold = Math.min(1, Math.max(0, (START_TEMP - temp) / 45));
+  return (
+    <svg viewBox="0 0 800 760" style={{ overflow: 'visible' }} role="img" aria-label="Túnel de frío industrial">
+      <Pipe d="M-300 640 H110" bands={[[-60, 640, false], [30, 640, false]]} />
+      {/* cuerpo */}
+      <rect x="60" y="260" width="680" height="380" rx="54" fill="#c8d0ea" stroke={INK} strokeWidth="6" />
+      <rect x="84" y="276" width="632" height="26" rx="13" fill="#fff" opacity=".4" />
+      {/* ventiladores */}
+      {[210, 590].map((cx) => (
+        <g key={cx}>
+          <circle cx={cx} cy="190" r="62" fill="#2c3052" stroke={INK} strokeWidth="6" />
+          <g className={on ? 'gl-spin gl-spin--fast' : ''}>
+            {[0, 120, 240].map((r) => <ellipse key={r} cx={cx} cy="156" rx="16" ry="32" fill="#9fe7ff" stroke={INK} strokeWidth="3" transform={`rotate(${r} ${cx} 190)`} />)}
+            <circle cx={cx} cy="190" r="10" fill="#fff" stroke={INK} strokeWidth="3" />
+          </g>
+        </g>
+      ))}
+      {/* ventana interior */}
+      <clipPath id="gl-tun-clip"><rect x="110" y="330" width="580" height="220" rx="30" /></clipPath>
+      <rect x="110" y="330" width="580" height="220" rx="30" fill="#26308a" stroke={INK} strokeWidth="6" />
+      <g clipPath="url(#gl-tun-clip)">
+        <rect x="110" y="500" width="580" height="50" fill="#1b1e4b" />
+        <rect x="190" y="470" width="420" height="34" rx="14" fill="#d3d9ff" stroke="#8f9bdf" strokeWidth="4" />
+        {[260, 330, 400, 470, 540].map((x) => <Gummy key={x} shape={shape} color={color} size={64} x={x - 32} y={410} shadow={false} />)}
+        <rect x="110" y="330" width="580" height="220" fill="#dff4ff" style={{ opacity: cold * 0.7, transition: 'opacity .3s' }} />
+        {on && [[170, 360], [280, 400], [420, 350], [540, 390], [630, 360]].map(([x, y], i) => (
+          <path key={x} className="gl-twinkle" style={{ animationDelay: `${i * 0.25}s` }}
+            d={`M${x} ${y} l3 8 8 3 -8 3 -3 8 -3 -8 -8 -3 8 -3z`} fill="#fff" />
+        ))}
+      </g>
+      {/* humo frío */}
+      {on && [160, 300, 440, 580].map((x, i) => (
+        <ellipse key={x} className="gl-coldfog" style={{ animationDelay: `${i * 0.5}s` }} cx={x} cy="650" rx="46" ry="24" fill="#e6f7ff" opacity=".8" />
+      ))}
+      {/* panel */}
+      <rect x="110" y="570" width="580" height="50" rx="18" fill="#2c3052" stroke={INK} strokeWidth="5" />
+      <text x="160" y="605" fontSize="30" fontWeight="800" fill={temp > 10 ? '#ff5a6e' : temp >= 4 ? '#5cf07a' : '#7fd0ff'} style={{ fontVariantNumeric: 'tabular-nums' }}>{Math.floor(temp)}°C</text>
+      <circle cx="640" cy="595" r="12" fill={on ? '#5cf07a' : '#8d86c9'} stroke="#fff" strokeWidth="2" />
+    </svg>
+  );
+}
 
 export default function CoolingStation() {
-  const { activeTray, setActiveTray } = useGame();
-  const done = activeTray.finalTexture !== null;
-
-  // Si el jugador vuelve a esta estación después de desmoldar, se muestra la temperatura ya registrada
-  const [temperature, setTemperature] = useState(() => (done ? activeTray.temperature : START_TEMP));
+  const { activeTray, setActiveTray, isPlaying } = useGame();
+  const [isZoomedIn, setIsZoomedIn] = useState(false);
   const [isCooling, setIsCooling] = useState(false);
+  const [temperature, setTemperature] = useState(() => (activeTray.finalTexture !== null ? activeTray.temperature : START_TEMP));
+  const [texture, setTexture] = useState(activeTray.finalTexture); // resultado local; se confirma al alejar la cámara
+  const done = texture !== null;
 
-  // Termostato: mientras el túnel está encendido, la temperatura baja rápidamente
+  // Termostato: con el túnel encendido la temperatura baja rápido
   useEffect(() => {
-    if (!isCooling) return undefined;
-    const interval = setInterval(() => {
-      setTemperature(prev => Math.max(MIN_TEMP, prev - 1));
-    }, TICK_MS);
-    return () => clearInterval(interval);
-  }, [isCooling]);
+    if (!isCooling || !isPlaying) return undefined;
+    const id = setInterval(() => setTemperature((t) => Math.max(MIN_TEMP, t - 1)), TICK_MS);
+    return () => clearInterval(id);
+  }, [isCooling, isPlaying]);
 
   // El túnel se apaga solo al tocar el mínimo
-  useEffect(() => {
-    if (temperature <= MIN_TEMP) setIsCooling(false);
-  }, [temperature]);
+  useEffect(() => { if (temperature <= MIN_TEMP) setIsCooling(false); }, [temperature]);
 
-  // Refleja la temperatura en la bandeja mientras se enfría (solo efectos visuales de la cinta)
+  // Efecto visual en la cinta mientras se enfría
   useEffect(() => {
-    if (isCooling) setActiveTray(prev => (prev.temperature === temperature ? prev : { ...prev, temperature }));
+    if (isCooling) setActiveTray((prev) => (prev.temperature === temperature ? prev : { ...prev, temperature }));
   }, [temperature, isCooling, setActiveTray]);
 
-  // DESMOLDAR: un solo intento por pedido. Guarda la textura para el Control de Calidad.
+  // DESMOLDAR: detiene el túnel y fija la textura (un solo intento)
   const demold = () => {
     if (done) return;
     setIsCooling(false);
-    const finalTexture = evaluateTexture(temperature);
-    setActiveTray(prev => (prev.finalTexture !== null ? prev : { ...prev, temperature, finalTexture }));
+    setTexture(evaluateTexture(temperature));
+  };
+
+  // CONFIRMAR: guarda la textura en el estado global (si ya se desmoldó)
+  const confirm = () => {
+    setIsCooling(false);
+    if (texture !== null) {
+      setActiveTray((prev) => (prev.finalTexture !== null ? prev : { ...prev, temperature, finalTexture: texture }));
+    }
+    setIsZoomedIn(false);
   };
 
   const inZone = temperature >= 4 && temperature <= 10;
-  const tempColor = temperature > 10 ? '#e0314b' : inZone ? '#1d8a37' : '#3f6fe6';
-  const result = done ? RESULTS[activeTray.finalTexture] : null;
+  const tempColor = temperature > 10 ? '#ff7a8c' : inZone ? '#7dffa0' : '#8fd8ff';
+  const msg = done ? RESULTS[texture]
+    : isCooling ? { cls: 'idle', text: 'Enfriando… ¡desmolda entre 4 y 10°C!' }
+    : { cls: 'idle', text: 'Enciende el túnel y desmolda en la zona ideal. Un solo intento.' };
+  const color = visibleColor(activeTray.pigment?.color ?? activeTray.base?.color ?? '#ff9fcf');
 
   return (
-    <div className="gl-panel">
-      <div className="gl-panel__head">
-        <span className="gl-panel__num" style={{ '--n1': '#8fb4ff', '--n2': '#3f6fe6' }}>6</span>
-        <h2 className="gl-panel__title">06. ENFRIAMIENTO</h2>
+    <ZoomShell
+      helper={<HelperCharacter text="¡Paciencia, que ya casi están listas! 🧊 Deja que las gomitas se enfríen." />}
+      badge={['#8fb4ff', '#3f6fe6']} num="6" title="06. ENFRIAMIENTO (TÚNEL DE FRÍO)"
+      isZoomedIn={isZoomedIn} onOpen={() => setIsZoomedIn(true)} onConfirm={confirm}
+      machine={<Tunnel temp={temperature} on={isCooling} shape={activeTray.shape ?? 'cuadrado'} color={color} />}
+    >
+      <div className="gl-zoom__inset">
+        <p className="gl-zoom__label">Temperatura</p>
+        <div className="gl-zoom__lcd gl-zoom__lcd--temp" style={{ color: tempColor }}>{Math.floor(temperature)}°C</div>
+        <p className="gl-zoom__label" style={{ marginTop: '.3rem', fontSize: '.7rem', opacity: .8 }}>Zona ideal: 4 – 10°C</p>
       </div>
-
-      <div className="gl-panel__body">
-        {/* Termostato */}
-        <div className="gl-section" style={{ flex: 1 }}>
-          <h3 className="gl-section__title">Termostato</h3>
-          <div className="gl-section__body" style={{ alignItems: 'center', gap: '1rem' }}>
-            <div className="gl-thermo">
-              {/* Zona ideal de gelificación (4–10°C) */}
-              <div
-                className="gl-thermo__danger"
-                style={{
-                  top: 'auto', bottom: `${pct(4)}%`, height: `${pct(10) - pct(4)}%`,
-                  background: 'repeating-linear-gradient(135deg, rgba(34, 197, 94, .35) 0 6px, rgba(34, 197, 94, .15) 6px 12px)',
-                  borderTop: '3px solid #22c55e', borderBottom: '3px solid #22c55e', alignItems: 'center'
-                }}
-              />
-              <div
-                className="gl-thermo__fill"
-                style={{ height: `${pct(temperature)}%`, backgroundColor: temperature > 10 ? '#dc2626' : inZone ? '#22c55e' : '#3b82f6' }}
-              ></div>
-            </div>
-
-            <div className="text-center">
-              <p className="gl-hint-text">TEMP. ACTUAL</p>
-              <p style={{ fontSize: '2.1rem', fontWeight: 800, lineHeight: 1, color: tempColor, fontVariantNumeric: 'tabular-nums' }}>
-                {Math.floor(temperature)}°C
-              </p>
-              <p className="gl-hint-text" style={{ fontSize: '.6rem', marginTop: '.2rem' }}>
-                Zona ideal:<br /><b style={{ color: '#1d8a37', fontSize: '.8rem' }}>4 – 10°C</b>
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Controles del túnel */}
-        <div className="gl-section" style={{ flex: 1.2 }}>
-          <h3 className="gl-section__title">Túnel de frío</h3>
-          <div className="gl-section__body" style={{ flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '.5rem' }}>
-            <button
-              onClick={() => setIsCooling(c => !c)}
-              disabled={done || temperature <= MIN_TEMP}
-              className={`gl-btn gl-btn--blue ${isCooling ? 'gl-btn--glow' : ''}`}
-              style={{ userSelect: 'none' }}
-            >
-              <span className={isCooling ? 'gl-spinner' : ''} style={{ display: 'grid' }}><SnowIcon size={24} /></span>
-              {isCooling ? 'APAGAR TÚNEL DE FRÍO' : 'ENCENDER TÚNEL DE FRÍO'}
-            </button>
-
-            <button onClick={demold} disabled={done} className="gl-btn gl-btn--gold">
-              DESMOLDAR
-            </button>
-
-            {result ? (
-              <p className="font-extrabold" style={{ color: result.color, fontSize: '.95rem' }}>{result.text}</p>
-            ) : (
-              <p className="gl-hint-text" style={{ fontSize: '.6rem' }}>
-                Enfría hasta la zona ideal y desmolda.<br />Solo tienes un intento.
-              </p>
-            )}
-          </div>
-        </div>
+      <div className="gl-zoom__btns">
+        <button onClick={() => setIsCooling(true)} disabled={done || isCooling || temperature <= MIN_TEMP || !isPlaying}
+          className="gl-btn gl-btn--blue gl-btn--xl">❄ ENCENDER TÚNEL</button>
+        <button onClick={demold} disabled={done}
+          className="gl-btn gl-btn--gold gl-btn--xl">DESMOLDAR</button>
       </div>
-    </div>
+      <p className={`gl-hydro__msg gl-hydro__msg--${msg.cls}`}>{msg.text}</p>
+    </ZoomShell>
   );
 }

@@ -31,10 +31,26 @@ const STAR = (() => {
   return pts.join(' ');
 })();
 
+/** ids del catálogo de moldes → figura dibujada */
+const SHAPE_ALIAS = { bear: 'osito', spectacled_bear: 'oso', toucan: 'tucan', glass_frog: 'rana' };
+const canonShape = (s) => SHAPE_ALIAS[s] ?? s;
+
+/** Gusano de gomita: cuerpo en S (el trazo grueso hace de cuerpo) */
+const WORM = 'M22 84 C6 62 38 58 50 50 C62 42 88 46 78 24';
+
 /** Cuerpo de la gomita (se pinta 2 veces: contorno + relleno). */
-function ShapeBody({ shape, fill, stroke, sw }) {
+function ShapeBody({ shape: rawShape, fill, stroke, sw }) {
+  const shape = canonShape(rawShape);
   const p = { fill, stroke, strokeWidth: sw, strokeLinejoin: 'round' };
   if (shape === 'estrella') return <polygon points={STAR} {...p} />;
+  if (shape === 'worm') {
+    return (
+      <g>
+        <path d={WORM} fill="none" stroke={stroke} strokeWidth={22 + Number(sw)} strokeLinecap="round" />
+        <path d={WORM} fill="none" stroke={fill} strokeWidth="22" strokeLinecap="round" />
+      </g>
+    );
+  }
   if (shape === 'osito') {
     return (
       <g {...p}>
@@ -90,8 +106,9 @@ function ShapeBody({ shape, fill, stroke, sw }) {
 
 /* ───────── GOMITA gelatinosa ───────── */
 export default function Gummy({
-  shape = 'cuadrado', color, size = 64, wobble = false, shadow = true, sparkle = false, className = '', ...rest
+  shape: rawShape = 'cuadrado', color, size = 64, wobble = false, shadow = true, sparkle = false, className = '', ...rest
 }) {
+  const shape = canonShape(rawShape);
   const uid = useId().replace(/:/g, '');
   const base = visibleColor(color);
   const dark = shade(base, -0.45);
@@ -115,6 +132,7 @@ export default function Gummy({
 
       {/* luz de borde inferior (luz que atraviesa el gel) */}
       <g opacity=".35" style={{ mixBlendMode: 'screen' }}>
+        {shape === 'worm' && <ellipse cx="36" cy="72" rx="12" ry="3.5" fill={shade(base, 0.7)} />}
         {shape === 'estrella' && <ellipse cx="50" cy="84" rx="14" ry="4" fill={shade(base, 0.7)} />}
         {shape === 'osito' && <ellipse cx="50" cy="84" rx="14" ry="4" fill={shade(base, 0.7)} />}
         {shape === 'rana' && <ellipse cx="50" cy="76" rx="16" ry="4" fill={shade(base, 0.7)} />}
@@ -182,6 +200,14 @@ export default function Gummy({
           <circle cx="60" cy="37" r="1" fill="#fff" />
           <path d="M34 27 Q40 20 50 20" stroke="#fff" strokeWidth="4.5" strokeLinecap="round" fill="none" opacity=".85" />
           <ellipse cx="36" cy="64" rx="3" ry="6" fill="#fff" opacity=".6" transform="rotate(18 36 64)" />
+        </g>
+      ) : shape === 'worm' ? (
+        <g>
+          <path d={WORM} fill="none" stroke={shade(base, -0.4)} strokeWidth="20" strokeDasharray="3 11" opacity=".3" />
+          <path d="M16 70 C12 62 22 58 32 56" stroke="#fff" strokeWidth="4" strokeLinecap="round" fill="none" opacity=".75" />
+          <circle cx="71" cy="20" r="5" fill="#fff" /><circle cx="85" cy="23" r="5" fill="#fff" />
+          <circle cx="72" cy="21" r="2.4" fill="#2a1a55" /><circle cx="86" cy="24" r="2.4" fill="#2a1a55" />
+          <path d="M73 31 Q79 36 86 31" stroke="#2a1a55" strokeWidth="2.4" strokeLinecap="round" fill="none" />
         </g>
       ) : shape === 'estrella' ? (
         <g>

@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
 import { GameProvider, useGame } from './context/GameContext';
 import { useGameLoop } from './hooks/useGameLoop';
+import HelperCharacter from './components/HelperCharacter';
 import ConveyorBelt from './components/layout/ConveyorBelt';
 import HydrationStation from './components/stations/HydrationStation';
 import FormulationStation from './components/stations/FormulationStation';
-import MixerStation from './components/stations/MixerStation';
-import HeatingStation from './components/stations/HeatingStation';
+import MixingStation from './components/stations/MixingStation';
+import CookingStation from './components/stations/CookingStation';
 import MoldingStation from './components/stations/MoldingStation';
 import CoolingStation from './components/stations/CoolingStation';
 import QualityControlStation from './components/stations/QualityControlStation';
@@ -16,6 +17,17 @@ import { ArrowIcon, PauseIcon, PlayIcon, SpinIcon, StarIcon } from './components
 import { STATION, FIRST_STATION, LAST_STATION } from './constants/stations';
 import ingredientsData from './data/ingredients.json';
 import shapesData from './data/shapes.json';
+
+// Frases de la ingeniera guía según la estación en la que está la bandeja
+const HELPER_BY_STATION = {
+  [STATION.HYDRATION]: { text: '¡Hola! Vamos a preparar gelatina. Entra a la máquina para hidratarla con agua fría.' },
+  [STATION.FORMULATION]: { text: '¡El momento de la verdad! Entra a la estación y elige tu base y pigmento.' },
+  [STATION.MIXING]: { text: '¡A mezclar se ha dicho! Entra y asegúrate de que todo quede homogéneo.' },
+  [STATION.HEATING]: { type: 'warning', text: '¡Atención aquí! Entra a cocinar, pero cuida que la temperatura no suba de 40°C.' },
+  [STATION.MOLDING]: { text: '¡A darle forma! Entra y elige el molde correcto para tu pedido.' },
+  [STATION.COOLING]: { text: '¡Casi listos! Entra al túnel y detén el frío justo a tiempo.' },
+  [STATION.QUALITY]: { text: '¡Trabajo terminado! Veamos si la gomita cumple con las especificaciones.' },
+};
 
 const formatTime = (seconds) => {
   const m = Math.floor(seconds / 60).toString().padStart(2, '0');
@@ -81,13 +93,6 @@ function GameBoard() {
             GUMMY LAB
           </h1>
           <div className="flex gap-3 items-center flex-wrap">
-            <button
-              onClick={() => setIsPlaying(!isPlaying)}
-              className={`gl-btn ${isPlaying ? 'gl-btn--red' : 'gl-btn--green'}`}
-            >
-              {isPlaying ? <PauseIcon size={18} /> : <PlayIcon size={18} />}
-              {isPlaying ? 'PAUSAR FÁBRICA' : 'INICIAR TURNO'}
-            </button>
             <button onClick={askRestart} className="gl-btn gl-btn--purple gl-btn--icon" aria-label="Reiniciar partida" title="Reiniciar partida">
               <SpinIcon size={20} />
             </button>
@@ -143,7 +148,7 @@ function GameBoard() {
 
         {/* CONTROL CENTRAL DE LA FÁBRICA: flechas para ir y volver entre estaciones */}
         <div className="gl-strip">
-          <span className="gl-strip__label">SIGUIENTE</span>
+          <span className="gl-strip__label">MUEVE LA CINTA</span>
           <div className="gl-pad">
             <button
               onClick={retreatConveyor} disabled={!canRetreat}
@@ -163,11 +168,23 @@ function GameBoard() {
 
       {/* ZONA 3: Panel de Control Dinámico */}
       <footer className="gl-dock">
-        <div className="h-full">
+        <div className="h-full flex items-stretch gap-3">
+          {/* Control del turno: inicio / pausa de la fábrica */}
+          <div className="gl-dock__turn">
+            <span className="gl-dock__turn-label">TURNO</span>
+            <button
+              onClick={() => setIsPlaying(!isPlaying)}
+              className={`gl-btn gl-btn--xl ${isPlaying ? 'gl-btn--red' : 'gl-btn--green'}`}
+            >
+              {isPlaying ? <PauseIcon size={20} /> : <PlayIcon size={20} />}
+              {isPlaying ? 'PAUSAR FÁBRICA' : 'INICIAR TURNO'}
+            </button>
+          </div>
+          <div className="h-full min-w-0 flex-1">
           {activeTray.station === STATION.HYDRATION && <HydrationStation key={runId} />}
           {activeTray.station === STATION.FORMULATION && <FormulationStation />}
-          {activeTray.station === STATION.MIXING && <MixerStation />}
-          {activeTray.station === STATION.HEATING && <HeatingStation />}
+          {activeTray.station === STATION.MIXING && <MixingStation />}
+          {activeTray.station === STATION.HEATING && <CookingStation />}
           {activeTray.station === STATION.MOLDING && <MoldingStation />}
           {activeTray.station === STATION.COOLING && <CoolingStation />}
           {/* La última estación (QA) es modal */}
@@ -176,6 +193,7 @@ function GameBoard() {
               <h2 className="gl-panel__title" style={{ fontSize: '1.8rem', opacity: 0.55 }}>ESPERANDO REINICIO...</h2>
             </div>
           )}
+          </div>
         </div>
       </footer>
 
@@ -184,6 +202,11 @@ function GameBoard() {
         <div className="gl-modal">
           <QualityControlStation />
         </div>
+      )}
+
+      {/* PERSONAJE GUÍA: esquina inferior derecha de la vista general */}
+      {!gameFinished && HELPER_BY_STATION[activeTray.station] && (
+        <HelperCharacter variant="floating" {...HELPER_BY_STATION[activeTray.station]} />
       )}
 
       {/* ALERTA DE TIEMPO AGOTADO DEL PEDIDO / RESULTADOS FINALES */}

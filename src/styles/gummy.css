@@ -322,3 +322,109 @@ body { margin: 0; background: #2a1a55; overflow: auto; }
 .gl-hydro__msg--ok { background: #d9f8de; color: #17803a; }
 .gl-hydro__msg--bad { background: #ffe1e5; color: #c0233b; }
 .gl-hydro__msg--idle { background: #eef0ff; color: #5b55a0; }
+
+/* ───────── Estación de Hidratación: vista ampliada (zoom-in a pantalla completa) ───────── */
+@keyframes gl-zoom-in { from { transform: scale(.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+@keyframes gl-belt { to { background-position: 38px 0, 0 0; } }
+@keyframes gl-powder { 0% { transform: translate(0, 0); opacity: 0; } 12% { opacity: 1; } 100% { transform: translate(var(--dx, 0px), 340px); opacity: 0; } }
+@keyframes gl-foam { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.12); } }
+.gl-powder { animation: gl-powder 1.5s linear infinite; }
+.gl-foam { transform-box: fill-box; transform-origin: center; animation: gl-foam 1.4s ease-in-out infinite; }
+
+/* Overlay (≈ fixed inset-0 z-50 bg-indigo-900/40 backdrop-blur-md) */
+.gl-zoom { position: fixed; inset: 0; z-index: 50; overflow: hidden; background: rgba(49, 46, 129, .4); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); color: #fff; }
+/* Escena: pared con ventana, suelo de baldosas y cinta transportadora */
+.gl-zoom__scene { position: absolute; inset: 0; background: linear-gradient(#8e66ea, #6a45c6 70%); }
+.gl-zoom__window { position: absolute; left: 50%; top: 7vh; width: 24vw; height: 34vh; border: .7vh solid #efe9ff; border-radius: 14px; box-sizing: border-box; background: radial-gradient(ellipse 70% 42% at 28% 100%, #5cc46a 0 62%, transparent 63%), radial-gradient(ellipse 80% 48% at 82% 106%, #3fa856 0 62%, transparent 63%), linear-gradient(#9fdcff, #d6f1ff); box-shadow: 0 .6vh 0 rgba(27, 30, 75, .35); }
+.gl-zoom__window::before, .gl-zoom__window::after { content: ''; position: absolute; background: #efe9ff; }
+.gl-zoom__window::before { left: 50%; top: 0; bottom: 0; width: .7vh; transform: translateX(-50%); }
+.gl-zoom__window::after { top: 50%; left: 0; right: 0; height: .7vh; transform: translateY(-50%); }
+.gl-zoom__floor { position: absolute; left: 0; right: 0; bottom: 14vh; height: 30vh; border-top: 1vh solid #4b2f9a; background: conic-gradient(#c4b8f7 25%, #8574e3 0 50%, #c4b8f7 0 75%, #8574e3 0) 0 0 / 9vw 9vw; }
+.gl-zoom__belt { position: absolute; left: 0; right: 0; bottom: 0; height: 14vh; border-top: .9vh solid #1b1e4b; background: repeating-linear-gradient(90deg, rgba(255, 255, 255, .09) 0 3px, transparent 3px 38px), linear-gradient(#4a4d6e, #2e3050); box-shadow: inset 0 1vh 0 rgba(255, 255, 255, .12); animation: gl-belt 1.4s linear infinite; }
+/* Escenario: entra de scale-95 a scale-100 */
+.gl-zoom__stage { position: relative; width: 100%; height: 100%; display: flex; animation: gl-zoom-in .35s ease-out backwards; }
+.gl-zoom__machine { position: relative; flex: 0 0 65%; height: 100%; }
+.gl-zoom__machine > svg { position: absolute; left: 50%; bottom: 8vh; height: 88vh; width: auto; max-width: 100%; transform: translateX(-50%); filter: drop-shadow(0 1vh 0 rgba(27, 30, 75, .25)); }
+.gl-zoom__side { position: relative; z-index: 2; flex: 0 0 35%; box-sizing: border-box; padding: 3vh 2.2vw 3vh 0; display: flex; flex-direction: column; justify-content: space-between; }
+/* Panel de cristal oscuro (≈ bg-[#23354C]/80 border-white/10 backdrop-blur-sm rounded-3xl p-6) */
+.gl-zoom__glass { display: flex; flex-direction: column; gap: .8rem; padding: 1.5rem; border-radius: 24px; background: rgba(35, 53, 76, .8); border: 1px solid rgba(255, 255, 255, .1); -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px); box-shadow: 0 1.2vh 0 rgba(11, 20, 38, .45), 0 20px 50px rgba(10, 5, 50, .4); }
+.gl-zoom__ptitle { margin: 0; text-align: center; font-weight: 800; line-height: 1.15; font-size: clamp(1rem, 2.3vh, 1.4rem); text-shadow: 0 2px 0 #0b1426; }
+.gl-zoom__inset { padding: .6rem; border-radius: 18px; background: rgba(10, 18, 36, .55); border: 1px solid rgba(255, 255, 255, .08); }
+.gl-zoom__label { margin: 0 0 .25rem; text-align: center; font-weight: 800; font-size: .85rem; letter-spacing: .08em; text-transform: uppercase; }
+.gl-zoom__lcd { display: flex; justify-content: center; background: #121b33; padding: .5rem .8rem; }
+.gl-zoom__digits { height: clamp(2.6rem, 7.5vh, 4.4rem); width: auto; filter: drop-shadow(0 0 5px rgba(150, 220, 255, .65)); }
+/* Tarjeta de gelatina */
+.gl-gcard { position: relative; display: flex; flex-direction: column; align-items: center; gap: .15rem; padding: .4rem .9rem .5rem; border-radius: 12px; border: 3px solid #1b1e4b; background: #f7e7d2; color: #3b2a1c; cursor: pointer; font-family: inherit; box-shadow: 0 4px 0 rgba(27, 30, 75, .6); transition: transform .12s, box-shadow .12s; }
+.gl-gcard:hover { transform: translateY(-2px); }
+.gl-gcard.is-selected { border-color: #ffd24a; box-shadow: 0 0 0 3px rgba(255, 210, 74, .45), 0 0 22px rgba(255, 200, 60, .6); }
+.gl-gcard__tag { font-size: .55rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: #8a6a4a; }
+.gl-gcard__name { font-size: .78rem; font-weight: 800; }
+.gl-gcard__check { position: absolute; top: -9px; right: -9px; width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; background: #22c55e; border: 2px solid #fff; color: #fff; font-size: .8rem; font-weight: 800; }
+/* Botones y mensaje */
+.gl-zoom__btns { display: flex; gap: .7rem; }
+.gl-zoom__btns .gl-btn { flex: 1; min-width: 0; white-space: normal; padding: .5rem .6rem; font-size: clamp(.8rem, 1.9vh, 1rem); line-height: 1.05; text-align: center; }
+.gl-zoom__glass .gl-hydro__msg { margin: 0; font-size: .75rem; }
+.gl-zoom__glass .gl-hydro__msg--idle { background: rgba(255, 255, 255, .12); color: #fff; }
+.gl-zoom__glass .gl-hydro__msg--ok { background: rgba(52, 199, 89, .3); color: #c4ffd2; }
+.gl-zoom__glass .gl-hydro__msg--bad { background: rgba(255, 77, 109, .3); color: #ffd0d8; }
+/* Salida: botón verde 3D abajo a la derecha */
+.gl-zoom__exit { display: flex; justify-content: flex-end; }
+.gl-zoom__exit .gl-btn { width: min(100%, 22rem); white-space: normal; text-align: center; line-height: 1.1; gap: .8rem; padding: .6rem 1.2rem; font-size: clamp(.9rem, 2.2vh, 1.15rem); }
+.gl-zoom__tick { display: grid; place-items: center; width: 2.2rem; height: 2.2rem; flex: none; border-radius: 8px; background: rgba(255, 255, 255, .25); font-size: 1.3rem; }
+@media (max-width: 860px) {
+  .gl-zoom { overflow-y: auto; }
+  .gl-zoom__stage { flex-direction: column; height: auto; min-height: 100%; }
+  .gl-zoom__machine { flex: none; height: 52vh; }
+  .gl-zoom__machine > svg { height: 50vh; bottom: 0; }
+  .gl-zoom__side { flex: none; padding: 1rem; gap: 1rem; }
+}
+@media (prefers-reduced-motion: reduce) { .gl-zoom__stage, .gl-zoom__belt, .gl-powder, .gl-foam { animation: none; } }
+
+/* Vibración por atasco (Mezclado con grumos) */
+@keyframes gl-shake { 0%,100% { transform: translate(0,0) rotate(0); } 20% { transform: translate(-7px,2px) rotate(-1.2deg); } 40% { transform: translate(6px,-2px) rotate(1deg); } 60% { transform: translate(-5px,1px) rotate(-.8deg); } 80% { transform: translate(4px,-1px) rotate(.6deg); } }
+.gl-shake { animation: gl-shake .38s linear; }
+@media (prefers-reduced-motion: reduce) { .gl-shake { animation: none; } }
+
+/* Moldeado: llenado de cavidades e inyector */
+@keyframes gl-fillup { from { transform: scale(.2); opacity: 0; } 60% { opacity: 1; } to { transform: scale(1); opacity: 1; } }
+.gl-fillup { transform-box: fill-box; transform-origin: 50% 100%; animation: gl-fillup .7s ease-out backwards; }
+@keyframes gl-sweep { 0% { transform: translateX(-165px); } 50% { transform: translateX(165px); } 100% { transform: translateX(0); } }
+.gl-sweep { animation: gl-sweep 1.4s ease-in-out; }
+/* Enfriamiento: humo frío */
+@keyframes gl-coldfog { 0% { transform: translateY(0) scale(.6); opacity: 0; } 25% { opacity: .75; } 100% { transform: translateY(46px) scale(1.7); opacity: 0; } }
+.gl-coldfog { transform-box: fill-box; transform-origin: center; animation: gl-coldfog 2.2s ease-out infinite; }
+.gl-zoom__lcd--temp { font-family: ui-monospace, 'Courier New', monospace; font-weight: 900; font-size: clamp(2.6rem, 8vh, 4.6rem); line-height: 1; letter-spacing: .04em; text-shadow: 0 0 8px currentColor; }
+@media (prefers-reduced-motion: reduce) { .gl-sweep, .gl-coldfog, .gl-fillup { animation: none; } }
+
+/* HelperCharacter: animaciones de entrada */
+@keyframes gl-fade-in { from { opacity: 0; transform: translateY(8px) scale(.97); } to { opacity: 1; transform: none; } }
+@keyframes gl-bounce-once { 0% { transform: translateY(10px); opacity: 0; } 55% { transform: translateY(-6px); opacity: 1; } 100% { transform: none; } }
+.animate-fade-in { animation: gl-fade-in .35s ease-out backwards; }
+.animate-bounce-once { animation: gl-bounce-once .6s ease-out backwards; }
+@media (prefers-reduced-motion: reduce) { .animate-fade-in, .animate-bounce-once { animation: none; } }
+
+/* Control del turno en el footer */
+.gl-dock__turn { flex: none; width: clamp(9.5rem, 15vw, 12.5rem); display: flex; flex-direction: column; justify-content: center; align-items: stretch; gap: .5rem; padding: .6rem .7rem; border-radius: 24px; background: rgba(255, 255, 255, .1); border: 3px solid rgba(255, 255, 255, .3); }
+.gl-dock__turn-label { text-align: center; font-weight: 800; letter-spacing: .12em; font-size: .78rem; color: #ffd84a; text-shadow: 0 2px 0 rgba(0, 0, 0, .3); }
+.gl-dock__turn .gl-btn { font-size: .95rem; line-height: 1.05; padding-inline: .6rem; }
+
+/* Mini-ticket del pedido dentro de la vista ampliada */
+.gl-zoom__order { display: flex; align-items: center; gap: .6rem; width: 100%; box-sizing: border-box; padding: .4rem .7rem .4rem .5rem; border-radius: 16px; background: rgba(255, 216, 74, .12); border: 1px dashed rgba(255, 216, 74, .6); text-align: left; }
+.gl-zoom__order > svg { flex: none; }
+.gl-zoom__order p { margin: 0; line-height: 1.2; }
+.gl-zoom__order-tag { font-size: .68rem; font-weight: 800; letter-spacing: .08em; color: #ffd84a; }
+.gl-zoom__order-line { font-size: .8rem; font-weight: 700; color: #fff; overflow-wrap: anywhere; }
+.gl-zoom__order-line b { color: #b9c6ee; font-weight: 800; }
+
+/* Barra de homogeneidad: la barra llena todo el contenedor (de 0 % a 100 %) */
+.gl-progress--full { max-width: none; height: 2rem; padding: 0; overflow: hidden; }
+.gl-progress--full .gl-progress__fill { border-radius: 0; }
+.gl-progress--full .gl-progress__fill::after { inset: 0 0 55% 0; border-radius: 0; background: rgba(255, 255, 255, .22); }
+
+/* Pie de la vista ampliada: franja oscura inferior (ayudante + botón de salida) */
+.gl-zoom__footer { position: absolute; left: 0; right: 0; bottom: 0; height: 14vh; box-sizing: border-box; z-index: 3; gap: 1rem; padding-block: .3rem; }
+.gl-zoom__footer .gl-zoom__exit { flex: none; width: min(22rem, 34vw); }
+@keyframes gl-fade-in-up { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+.animate-fade-in-up { animation: gl-fade-in-up .4s ease-out backwards; }
+@media (prefers-reduced-motion: reduce) { .animate-fade-in-up { animation: none; } }
+@media (max-width: 860px) { .gl-zoom__footer { position: sticky; height: auto; min-height: 14vh; flex-wrap: wrap; justify-content: center; padding-block: .6rem; background: #2e3050; } }

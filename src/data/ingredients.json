@@ -2,7 +2,7 @@
   "bases": [
     {
       "id": "b1",
-      "name": "Agua ",
+      "name": "Agua purificada",
       "type": "solvente",
       "color": "transparent"
     },
@@ -24,7 +24,8 @@
       "id": "g1",
       "name": "Gelatina sin sabor",
       "activationTemp": 60,
-      "degradationTemp": 95
+      "degradationTemp": 95,
+      "color": "#ff9fcf"
     }
   ],
   "pigments": [
@@ -53,7 +54,7 @@
       "preparation": "Extracción acuosa",
       "variant": "Limón",
       "group": "citricos",
-      "groupName": "Cascara de Cítricos"
+      "groupName": "Ralladura de Cítricos"
     },
     {
       "id": "p4",
