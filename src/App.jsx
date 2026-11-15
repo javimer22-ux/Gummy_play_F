@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useLayoutEffect, useState } from 'react';
 import { sfx, setSoundEnabled } from './utils/soundEngine';
 import StartScreen from './StartScreen';
 import SetupScreen from './SetupScreen';
@@ -251,7 +251,7 @@ function GameBoard({ onExit, onSettings }) {
   );
 }
 
-export default function App() {
+function AppInner() {
   // Máquina de estados: START -> CONFIG -> PLAYING
   const [gameState, setGameState] = useState('START');
   const [gameConfig, setGameConfig] = useState({ soundOn: true, orderCount: 3 }); // orderCount: 3 | 5 | 'infinite'
@@ -281,4 +281,130 @@ export default function App() {
       <GameBoard onExit={() => setGameState('START')} onSettings={() => setGameState('CONFIG')} />
     </GameProvider>
   );
+}
+
+/* ───────── Escala responsiva (móvil / pantallas pequeñas) ─────────
+   Si width < 1024 || height < 620, el juego se dibuja en un lienzo fijo de 1280×720 y se escala
+   para caber en la pantalla. En escritorio no cambia nada (los contenedores son `display: contents`). */
+const BASE_W = 1280;
+const BASE_H = 720;
+const EMU_ID = 'gl-viewport-emulation';
+
+// <<VP-EMU
+const UNITS = { vw: BASE_W / 100, dvw: BASE_W / 100, svw: BASE_W / 100, lvw: BASE_W / 100, vh: BASE_H / 100, dvh: BASE_H / 100, svh: BASE_H / 100, lvh: BASE_H / 100, vmin: BASE_H / 100, vmax: BASE_W / 100 };
+const UNIT_RE = /(-?\d*\.?\d+)(dvw|svw|lvw|vw|dvh|svh|lvh|vh|vmin|vmax)\b/g;
+// Las unidades de viewport se convierten a píxeles de la pantalla base 1280×720 (así vh/vw son los de escritorio)
+const toBaseUnits = (css) => css.replace(UNIT_RE, (_, n, u) => `${+(parseFloat(n) * UNITS[u]).toFixed(3)}px`);
+
+const lenPx = (v) => {
+  const m = /^\s*(-?[\d.]+)\s*(px|rem|em)?\s*$/.exec(v);
+  return m ? parseFloat(m[1]) * (m[2] === 'rem' || m[2] === 'em' ? 16 : 1) : NaN;
+};
+// Evalúa una media query como si la ventana midiera 1280×720 (lo que verías en una laptop)
+function matchesBase(query) {
+  const one = (q) => {
+    let t = q.trim(); let neg = false;
+    if (/^not\s+/i.test(t)) { neg = true; t = t.replace(/^not\s+/i, ''); }
+    t = t.replace(/^only\s+/i, '');
+    const ok = t.split(/\s+and\s+/i).every((raw) => {
+      const p = raw.trim();
+      if (p === '' || p === 'screen' || p === 'all') return true;
+      if (p === 'print') return false;
+      let m = /^\(\s*(min-width|max-width|min-height|max-height|width|height)\s*:\s*([^)]+)\)$/.exec(p);
+      if (m) {
+        const v = lenPx(m[2]); const size = m[1].endsWith('width') ? BASE_W : BASE_H;
+        if (m[1].startsWith('min')) return size >= v;
+        if (m[1].startsWith('max')) return size <= v;
+        return size === v;
+      }
+      m = /^\(\s*(width|height)\s*(>=|<=|>|<)\s*([^)]+)\)$/.exec(p);
+      if (m) {
+        const v = lenPx(m[3]); const size = m[1] === 'width' ? BASE_W : BASE_H;
+        return { '>=': size >= v, '<=': size <= v, '>': size > v, '<': size < v }[m[2]];
+      }
+      if (/^\(\s*orientation\s*:\s*landscape\s*\)$/.test(p)) return true;
+      if (/^\(\s*orientation\s*:\s*portrait\s*\)$/.test(p)) return false;
+      return window.matchMedia(p).matches; // prefers-reduced-motion, hover, etc.: los reales del dispositivo
+    });
+    return neg ? !ok : ok;
+  };
+  return query.split(',').some(one);
+}
+
+function emitRules(rules, out, imports) {
+  for (const r of rules) {
+    if (r.type === 3) imports.push(r.cssText); // @import
+    else if (r.type === 4) { // @media
+      // el aviso de girar el teléfono usa la orientación REAL del dispositivo
+      const real = r.cssText.includes('gl-rotate-hint');
+      if (real ? window.matchMedia(r.media.mediaText).matches : matchesBase(r.media.mediaText)) emitRules(r.cssRules, out, imports);
+    } else if (r.type === 1) out.push(`${r.selectorText}{${toBaseUnits(r.style.cssText)}}`); // regla normal
+    else if (r.type === 12) { out.push(`@supports ${r.conditionText}{`); emitRules(r.cssRules, out, imports); out.push('}'); }
+    else out.push(toBaseUnits(r.cssText)); // @keyframes, @font-face...
+  }
+}
+
+let disabledSheets = [];
+function enableBaseEmulation() {
+  disableBaseEmulation();
+  const out = []; const imports = [];
+  for (const sheet of Array.from(document.styleSheets)) {
+    let rules;
+    try { rules = sheet.cssRules; } catch { continue; } // hojas externas (Google Fonts): se dejan como están
+    emitRules(rules, out, imports);
+    sheet.disabled = true; disabledSheets.push(sheet);
+  }
+  const el = document.createElement('style');
+  el.id = EMU_ID;
+  el.textContent = imports.concat(out).join('\n');
+  document.head.appendChild(el);
+}
+function disableBaseEmulation() {
+  disabledSheets.forEach((s) => { s.disabled = false; });
+  disabledSheets = [];
+  document.getElementById(EMU_ID)?.remove();
+}
+// VP-EMU>>
+
+const readViewport = () => ({ w: window.innerWidth, h: window.innerHeight });
+
+function ScaledStage({ children }) {
+  const [vp, setVp] = useState(readViewport);
+  useEffect(() => {
+    const on = () => setVp(readViewport());
+    window.addEventListener('resize', on);
+    window.addEventListener('orientationchange', on);
+    window.visualViewport?.addEventListener('resize', on);
+    return () => {
+      window.removeEventListener('resize', on);
+      window.removeEventListener('orientationchange', on);
+      window.visualViewport?.removeEventListener('resize', on);
+    };
+  }, []);
+
+  const scaled = vp.w < 1024 || vp.h < 620;
+  const portrait = vp.w < vp.h;
+  const scale = Math.min(vp.w / BASE_W, vp.h / BASE_H);
+
+  // Antes de pintar: los estilos pasan a medirse como en una pantalla de 1280×720 (y vuelven al salir)
+  useLayoutEffect(() => {
+    if (!scaled) return undefined;
+    enableBaseEmulation();
+    return disableBaseEmulation;
+  }, [scaled, portrait]);
+
+  if (!scaled) {
+    return <div style={{ display: 'contents' }}><div style={{ display: 'contents' }}>{children}</div></div>;
+  }
+  return (
+    <div style={{ position: 'fixed', inset: 0, width: '100dvw', height: '100dvh', overflow: 'hidden', background: '#2a1a55', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ flex: 'none', position: 'relative', width: BASE_W, height: BASE_H, overflow: 'hidden', transformOrigin: 'center center', transform: `scale(${scale})` }}>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+export default function App() {
+  return <ScaledStage><AppInner /></ScaledStage>;
 }
