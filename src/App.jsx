@@ -284,14 +284,21 @@ function AppInner() {
 }
 
 /* ───────── Escala responsiva (móvil / pantallas pequeñas) ─────────
-   Si width < 1024 || height < 620, el juego se dibuja en un lienzo fijo de 1280×720 y se escala
-   para caber en la pantalla. En escritorio no cambia nada (los contenedores son `display: contents`). */
+   Si width < 1024 || height < 620, el juego se dibuja en un lienzo virtual (alto 720, ancho según la pantalla, mín. 1280)
+   y se escala para llenar toda la pantalla. En escritorio no cambia nada (los contenedores son `display: contents`). */
 const BASE_W = 1280;
 const BASE_H = 720;
 const EMU_ID = 'gl-viewport-emulation';
 
 // <<VP-EMU
-const UNITS = { vw: BASE_W / 100, dvw: BASE_W / 100, svw: BASE_W / 100, lvw: BASE_W / 100, vh: BASE_H / 100, dvh: BASE_H / 100, svh: BASE_H / 100, lvh: BASE_H / 100, vmin: BASE_H / 100, vmax: BASE_W / 100 };
+let emuW = BASE_W;
+let emuH = BASE_H;
+let UNITS = {};
+const setEmuSize = (w, h) => {
+  emuW = w; emuH = h;
+  UNITS = { vw: w / 100, dvw: w / 100, svw: w / 100, lvw: w / 100, vh: h / 100, dvh: h / 100, svh: h / 100, lvh: h / 100, vmin: Math.min(w, h) / 100, vmax: Math.max(w, h) / 100 };
+};
+setEmuSize(BASE_W, BASE_H);
 const UNIT_RE = /(-?\d*\.?\d+)(dvw|svw|lvw|vw|dvh|svh|lvh|vh|vmin|vmax)\b/g;
 // Las unidades de viewport se convierten a píxeles de la pantalla base 1280×720 (así vh/vw son los de escritorio)
 const toBaseUnits = (css) => css.replace(UNIT_RE, (_, n, u) => `${+(parseFloat(n) * UNITS[u]).toFixed(3)}px`);
@@ -300,7 +307,7 @@ const lenPx = (v) => {
   const m = /^\s*(-?[\d.]+)\s*(px|rem|em)?\s*$/.exec(v);
   return m ? parseFloat(m[1]) * (m[2] === 'rem' || m[2] === 'em' ? 16 : 1) : NaN;
 };
-// Evalúa una media query como si la ventana midiera 1280×720 (lo que verías en una laptop)
+// Evalúa una media query como si la ventana midiera emuW × emuH (el lienzo virtual)
 function matchesBase(query) {
   const one = (q) => {
     let t = q.trim(); let neg = false;
@@ -312,18 +319,18 @@ function matchesBase(query) {
       if (p === 'print') return false;
       let m = /^\(\s*(min-width|max-width|min-height|max-height|width|height)\s*:\s*([^)]+)\)$/.exec(p);
       if (m) {
-        const v = lenPx(m[2]); const size = m[1].endsWith('width') ? BASE_W : BASE_H;
+        const v = lenPx(m[2]); const size = m[1].endsWith('width') ? emuW : emuH;
         if (m[1].startsWith('min')) return size >= v;
         if (m[1].startsWith('max')) return size <= v;
         return size === v;
       }
       m = /^\(\s*(width|height)\s*(>=|<=|>|<)\s*([^)]+)\)$/.exec(p);
       if (m) {
-        const v = lenPx(m[3]); const size = m[1] === 'width' ? BASE_W : BASE_H;
+        const v = lenPx(m[3]); const size = m[1] === 'width' ? emuW : emuH;
         return { '>=': size >= v, '<=': size <= v, '>': size > v, '<': size < v }[m[2]];
       }
-      if (/^\(\s*orientation\s*:\s*landscape\s*\)$/.test(p)) return true;
-      if (/^\(\s*orientation\s*:\s*portrait\s*\)$/.test(p)) return false;
+      if (/^\(\s*orientation\s*:\s*landscape\s*\)$/.test(p)) return emuW >= emuH;
+      if (/^\(\s*orientation\s*:\s*portrait\s*\)$/.test(p)) return emuW < emuH;
       return window.matchMedia(p).matches; // prefers-reduced-motion, hover, etc.: los reales del dispositivo
     });
     return neg ? !ok : ok;
@@ -345,8 +352,9 @@ function emitRules(rules, out, imports) {
 }
 
 let disabledSheets = [];
-function enableBaseEmulation() {
+function enableBaseEmulation(w, h) {
   disableBaseEmulation();
+  setEmuSize(w, h);
   const out = []; const imports = [];
   for (const sheet of Array.from(document.styleSheets)) {
     let rules;
@@ -384,21 +392,27 @@ function ScaledStage({ children }) {
 
   const scaled = vp.w < 1024 || vp.h < 620;
   const portrait = vp.w < vp.h;
-  const scale = Math.min(vp.w / BASE_W, vp.h / BASE_H);
+  // Lienzo virtual que ocupa TODA la pantalla: alto 720 y ancho según la proporción del teléfono (mín. 1280).
+  // Si la pantalla es más "cuadrada" que 16:9, se fija el ancho en 1280 y crece el alto.
+  const aspect = vp.w / vp.h;
+  const wide = aspect >= BASE_W / BASE_H;
+  const stageW = wide ? Math.round(BASE_H * aspect) : BASE_W;
+  const stageH = wide ? BASE_H : Math.round(BASE_W / aspect);
+  const scale = wide ? vp.h / BASE_H : vp.w / BASE_W;
 
-  // Antes de pintar: los estilos pasan a medirse como en una pantalla de 1280×720 (y vuelven al salir)
+  // Antes de pintar: los estilos pasan a medirse como en una pantalla de stageW × stageH (y vuelven al salir)
   useLayoutEffect(() => {
     if (!scaled) return undefined;
-    enableBaseEmulation();
+    enableBaseEmulation(stageW, stageH);
     return disableBaseEmulation;
-  }, [scaled, portrait]);
+  }, [scaled, portrait, stageW, stageH]);
 
   if (!scaled) {
     return <div style={{ display: 'contents' }}><div style={{ display: 'contents' }}>{children}</div></div>;
   }
   return (
     <div style={{ position: 'fixed', inset: 0, width: '100dvw', height: '100dvh', overflow: 'hidden', background: '#2a1a55', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <div style={{ flex: 'none', position: 'relative', width: BASE_W, height: BASE_H, overflow: 'hidden', transformOrigin: 'center center', transform: `scale(${scale})` }}>
+      <div style={{ flex: 'none', position: 'relative', width: stageW, height: stageH, overflow: 'hidden', transformOrigin: 'center center', transform: `scale(${scale})` }}>
         {children}
       </div>
     </div>
