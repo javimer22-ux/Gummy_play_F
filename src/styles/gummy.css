@@ -428,3 +428,38 @@ body { margin: 0; background: #2a1a55; overflow: auto; }
 .animate-fade-in-up { animation: gl-fade-in-up .4s ease-out backwards; }
 @media (prefers-reduced-motion: reduce) { .animate-fade-in-up { animation: none; } }
 @media (max-width: 860px) { .gl-zoom__footer { position: sticky; height: auto; min-height: 14vh; flex-wrap: wrap; justify-content: center; padding-block: .6rem; background: #2e3050; } }
+
+/* ───────── Responsive (laptop y móvil) ───────── */
+.gl-app { min-height: 44rem; }                       /* antes 700px fijos */
+.gl-hud { flex-wrap: wrap; row-gap: .4rem; }
+.gl-ticket { min-width: min(18rem, 100%); }
+.gl-dock { height: clamp(14rem, 29vh, 17rem); }       /* antes en px */
+.gl-tray { width: clamp(6rem, 9.5vw, 9rem); }        /* antes en px */
+.gl-modal { overflow-y: auto; }
+.gl-report { max-height: 92dvh; overflow-y: auto; }
+.gl-zoom__side { overflow-y: auto; max-height: 100dvh; }
+.gl-zoom__glass { max-height: calc(100dvh - 9rem); overflow-y: auto; }
+
+/* Teléfono vertical: la fábrica no cabe a lo ancho, se desplaza en horizontal en vez de cortarse */
+@media (max-width: 640px) and (orientation: portrait) { .gl-board { min-width: 54rem; } }
+@media (max-width: 900px) { .gl-ticket--queue { display: none; } }
+
+/* Teléfono horizontal: la vista ampliada mantiene máquina | panel lado a lado (antes se apilaba) */
+@media (orientation: landscape) and (max-width: 860px) {
+  .gl-zoom { overflow: hidden; }
+  .gl-zoom__stage { flex-direction: row; height: 100%; min-height: 0; }
+  .gl-zoom__machine { flex: 0 0 55%; height: 100%; }
+  .gl-zoom__machine > svg { height: 84vh; bottom: 6vh; }
+  .gl-zoom__side { flex: 0 0 45%; padding: 2vh 2vw 2vh 0; gap: 0; }
+}
+
+/* Aviso de girar el teléfono (no bloquea el juego) */
+.gl-rotate-hint { display: none; }
+@media (max-width: 480px) and (orientation: portrait) {
+  .gl-rotate-hint {
+    display: flex; align-items: center; gap: .6rem; position: fixed; left: 50%; bottom: .6rem; transform: translateX(-50%);
+    z-index: 90; max-width: 92vw; padding: .4rem .5rem .4rem .9rem; border-radius: 999px;
+    background: rgba(30, 20, 80, .92); color: #fff; font: 700 .8rem/1.15 var(--gl-font, system-ui); border: 2px solid #ffd84a;
+  }
+  .gl-rotate-hint button { flex: none; width: 1.8rem; height: 1.8rem; border-radius: 50%; border: 0; background: #ffd84a; color: #2a1a55; font-weight: 900; }
+}

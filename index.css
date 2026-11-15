@@ -1,0 +1,11 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  margin: 0;
+  padding: 0;
+}
+
+html { font-size: clamp(9px, min(1vw, 2vh), 15px); -webkit-text-size-adjust: 100%; }
+body { overflow-x: auto; }

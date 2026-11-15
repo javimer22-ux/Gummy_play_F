@@ -91,7 +91,7 @@ function GameBoard({ onExit, onSettings }) {
   }, [canAdvance, canRetreat, advanceConveyor, retreatConveyor]);
 
   return (
-    <div className="gl-app">
+    <div className="gl-app gl-board">
 
       {/* ZONA 1: HUD y Pedidos */}
       <header className="gl-hud">

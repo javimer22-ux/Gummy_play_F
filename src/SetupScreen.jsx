@@ -39,15 +39,15 @@ const stepPct = (i) => (i * 100) / LAST_STEP; // 0 | 33.33 | 66.66 | 100
       <div className="relative z-10 flex h-full items-center justify-center gap-6 px-4">
         {/* Panel de ajustes */}
         <section
-          className="w-[min(46rem,94vw)] min-w-0 rounded-3xl border-4 border-yellow-400 bg-indigo-950/95 p-[clamp(1rem,3vh,2rem)] shadow-[0_0_0_4px_rgba(255,255,255,.08),0_20px_50px_rgba(0,0,0,.6)]"
+          className="max-h-[92dvh] overflow-y-auto w-[min(46rem,94vw)] min-w-0 rounded-3xl border-4 border-yellow-400 bg-indigo-950/95 p-[clamp(1rem,3vh,2rem)] shadow-[0_0_0_4px_rgba(255,255,255,.08),0_20px_50px_rgba(0,0,0,.6)]"
           aria-labelledby="setup-title"
         >
           <h2 id="setup-title" className="m-0 mb-[2.5vh] text-center">
-            <CartoonTitle className="whitespace-nowrap text-[clamp(1rem,2.5vw,2rem)]">GUMMY LAB - AJUSTES DE TRABAJO</CartoonTitle>
+            <CartoonTitle className="text-center sm:whitespace-nowrap text-[clamp(1rem,2.5vw,2rem)]">GUMMY LAB - AJUSTES DE TRABAJO</CartoonTitle>
           </h2>
 
           {/* SONIDO */}
-          <div className="mb-4 flex items-center justify-center gap-4 rounded-2xl bg-black/35 px-5 py-3">
+          <div className="mb-4 flex flex-wrap items-center justify-center gap-4 rounded-2xl bg-black/35 px-5 py-3">
             <span className="mr-2 text-xl font-extrabold tracking-wide text-white">SONIDO</span>
             <button
               onClick={() => setSound(true)} aria-pressed={draft.soundOn}
@@ -68,7 +68,7 @@ const stepPct = (i) => (i * 100) / LAST_STEP; // 0 | 33.33 | 66.66 | 100
           <div className="mb-5 rounded-2xl bg-black/35 px-5 pb-4 pt-3">
             <p className="m-0 mb-2 text-center text-xl font-extrabold tracking-wide text-white">NÚMERO DE PEDIDOS</p>
 
-            <div className="rounded-2xl border-4 border-yellow-400 bg-gradient-to-b from-violet-600 to-indigo-700 px-20 pb-3 pt-3 shadow-[inset_0_-6px_12px_rgba(0,0,0,.25)]">
+            <div className="rounded-2xl border-4 border-yellow-400 bg-gradient-to-b from-violet-600 to-indigo-700 px-[clamp(2.5rem,8vw,5rem)] pb-3 pt-3 shadow-[inset_0_-6px_12px_rgba(0,0,0,.25)]">
               {/* Riel: input range invisible encima para arrastrar con mouse o dedo */}
               <div className="relative h-14">
                 <div className="pointer-events-none absolute left-0 right-0 top-1/2 h-7 -translate-y-1/2 rounded-full border-2 border-cyan-300/70 bg-indigo-950/80">
@@ -117,7 +117,7 @@ const stepPct = (i) => (i * 100) / LAST_STEP; // 0 | 33.33 | 66.66 | 100
           </div>
 
           {/* Botones inferiores */}
-          <div className="flex items-center justify-between gap-3">
+          <div className="flex flex-wrap items-center justify-between gap-3">
             <button
               onClick={onBack}
               className={`${arcade} border-white/80 bg-gradient-to-b from-orange-400 to-red-600 px-7 py-2.5 text-[clamp(1.1rem,2.2vw,1.7rem)] text-white shadow-[0_6px_0_#8a1c1c] hover:brightness-110`}
