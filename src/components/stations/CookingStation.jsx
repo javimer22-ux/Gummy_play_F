@@ -7,11 +7,16 @@ import ZoomShell, { INK, Pipe, mmss } from '../layout/ZoomShell';
 const TICK_MS = 100;
 const HEAT = 2;     // °C por tick con fuego (≈20°C/s)
 const MIN_T = 20, MAX_T = 140;
-const pct = (t) => ((Math.min(MAX_T, Math.max(MIN_T, t)) - MIN_T) / (MAX_T - MIN_T)) * 100;
 
 /* Marmita con termómetro visible y llama */
 function Marmita({ temp, limit, on, burned }) {
-  const p = pct(temp);
+  const isPitahaya = limit <= 40;
+  const visualMaxTemp = isPitahaya ? 52 : 110;
+  const minTargetTemp = isPitahaya ? 30 : 60;
+  const maxTargetTemp = isPitahaya ? 40 : Math.min(90, limit);
+  const vpct = (t) => Math.min(100, Math.max(0, ((t - 20) / (visualMaxTemp - 20)) * 100));
+  const yAt = (t) => 606 - 290 * (vpct(t) / 100);
+  const p = vpct(temp);
   const col = burned || temp >= limit ? '#e0314b' : temp >= limit - 15 ? '#ffb020' : '#3b82f6';
   return (
     <svg viewBox="0 0 800 760" style={{ overflow: 'visible' }} role="img" aria-label="Marmita de cocción">
@@ -41,8 +46,15 @@ function Marmita({ temp, limit, on, burned }) {
       <rect x="652" y="300" width="52" height="320" rx="26" fill="#fff" stroke={INK} strokeWidth="6" />
       <rect x="664" y={606 - 290 * (p / 100)} width="28" height={290 * (p / 100) + 6} rx="12" fill={col} style={{ transition: 'fill .3s' }} />
       <circle cx="678" cy="640" r="30" fill={col} stroke={INK} strokeWidth="6" style={{ transition: 'fill .3s' }} />
-      <rect x="656" y={606 - 290 * pct(limit) / 100} width="44" height="5" fill="#16a34a" />
-      <text x="716" y={612 - 290 * pct(limit) / 100} fontSize="14" fontWeight="800" fill="#16a34a">{limit}°</text>
+      {/* franja verde del rango permitido */}
+      <rect x="660" y={yAt(maxTargetTemp)} width="36" height={yAt(minTargetTemp) - yAt(maxTargetTemp)} rx="6" fill="#22e06b" opacity=".5" stroke="#16a34a" strokeWidth="2" />
+      {/* límite superior: línea roja + flecha + etiqueta */}
+      <rect x="650" y={yAt(maxTargetTemp) - 6} width="56" height="4" rx="2" fill="#e0314b" />
+      <path d={`M726 ${yAt(maxTargetTemp)} l16 -9 v18Z`} transform="translate(-22 0)" fill="#e0314b" stroke={INK} strokeWidth="2" />
+      <text x="722" y={yAt(maxTargetTemp) + 5} fontSize="15" fontWeight="800" fill="#e0314b" stroke="#fff" strokeWidth="3" paintOrder="stroke">{`MÁX ${maxTargetTemp}°C`}</text>
+      {/* límite inferior: flecha + etiqueta */}
+      <path d={`M726 ${yAt(minTargetTemp)} l16 -9 v18Z`} transform="translate(-22 0)" fill="#16a34a" stroke={INK} strokeWidth="2" />
+      <text x="722" y={yAt(minTargetTemp) + 5} fontSize="15" fontWeight="800" fill="#15803d" stroke="#fff" strokeWidth="3" paintOrder="stroke">{`MÍN ${minTargetTemp}°C`}</text>
     </svg>
   );
 }
@@ -73,11 +85,11 @@ export default function CookingStation() {
   useEffect(() => {
     if (!on) return undefined;
     const id = setInterval(() => {
-      setTemp((t) => Math.min(MAX_T, t + HEAT));
+      setTemp((t) => Math.min(MAX_T, t + (limit <= 40 ? HEAT * 0.6 : HEAT))); // Pitahaya: calienta más despacio
       setSecs((s) => s + TICK_MS / 1000);
     }, TICK_MS);
     return () => clearInterval(id);
-  }, [on]);
+  }, [on, limit]);
 
   // Refleja la temperatura en la bandeja (efectos de la cinta) e inyecta burned al pasarse
   useEffect(() => {
@@ -104,6 +116,7 @@ export default function CookingStation() {
 
   return (
     <ZoomShell
+      done={stopped && !burned}
       helper={limit <= 40
         ? <HelperCharacter type="warning" text="🚨 ¡ALERTA! ¡No superes los 40 °C! Controla el calor para proteger las betalaínas." />
         : <HelperCharacter type="info" text={`🔥 Calienta la mezcla entre 60 °C y ${limit} °C para activar la gelatina sin quemar el lote.`} />}

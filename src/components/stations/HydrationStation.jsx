@@ -7,6 +7,7 @@ import { useGame } from '../../context/GameContext';
 import { IngredientArt } from '../entities/Ingredient';
 import ingredientsData from '../../data/ingredients.json';
 
+const WINDOW_SRC = '/assets/ventana-1.jpg'; // fotografía de la ventana del fondo (estación 1)
 const TICK_MS = 100;    // cada tick real (0,1 s)...
 const SIM_SEC = 5;      // ...suma 2 s simulados: 5 min de reposo ≈ 15 s reales
 const IDEAL_MIN = 60;  // 05:00
@@ -193,7 +194,8 @@ function HydrationMachine({ hasGelatin, started, hydrating, hasLumps, bloomed, t
 
 /* ───────── Estación 1: Hidratación ───────── */
 export default function HydrationStation() {
-  const { activeTray, isPlaying, sprinkleGelatin, finishHydration } = useGame();
+  const { activeTray, isPlaying, sprinkleGelatin, finishHydration, config } = useGame();
+  const isTutorial = config?.orderCount === 1;
   const [isZoomedIn, setIsZoomedIn] = useState(false);
   const [chosen, setChosen] = useState(Boolean(activeTray.gellingAgent)); // selección visual de la gelatina
   const [isHydrating, setIsHydrating] = useState(false);
@@ -273,7 +275,16 @@ export default function HydrationStation() {
   const zoomView = isZoomedIn && (
     <div className="gl-zoom" role="dialog" aria-modal="true" aria-label="Máquina de hidratación">
       <div className="gl-zoom__scene" aria-hidden="true">
-        <div className="gl-zoom__window" />
+        <div
+          className="gl-zoom__window"
+          style={{
+            // capas (de arriba a abajo): reflejos del vidrio, fotografía de la estación 1 y cielo de respaldo
+            backgroundImage: `linear-gradient(115deg, rgba(255,255,255,.24) 0 14%, transparent 14% 27%, rgba(255,255,255,.13) 27% 33%, transparent 33%), url(${WINDOW_SRC}), linear-gradient(#9fdcff, #d6f1ff)`,
+            backgroundSize: '100% 100%, cover, 100% 100%',
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat',
+          }}
+        />
         <div className="gl-zoom__floor" />
         <div className="gl-zoom__belt" />
       </div>
@@ -325,7 +336,7 @@ export default function HydrationStation() {
       {/* Pie oscuro: ayudante a la izquierda/centro, botón verde a la derecha */}
       <div className="gl-zoom__footer flex w-full items-center justify-between px-8">
         <div className="flex min-w-0 flex-1 justify-center">
-          <HelperCharacter text="¡A despertar la gelatina! 💦 Mézclala con agua fría y deja que se hidrate." />
+          <HelperCharacter key={String(stopped || finished)} text={isTutorial ? (stopped || finished ? "¡Gelatina hidratada! Pulsa 'Confirmar y alejar cámara'." : 'Espolvorea la gelatina sin sabor en agua fría y espera a que esponje.') : "¡A despertar la gelatina! 💦 Mézclala con agua fría y deja que se hidrate."} />
         </div>
         <div className="gl-zoom__exit">
           <button onClick={confirm} className="gl-btn gl-btn--xl">

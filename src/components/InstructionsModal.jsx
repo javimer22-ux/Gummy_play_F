@@ -135,7 +135,7 @@ const STEPS = [
   {
     num: 1,
     title: 'Hidratación',
-    text: 'Espolvorea la gelatina sin sabor en agua fría y déjala reposar unos 5 minutos hasta que esponje.',
+    text: 'Espolvorea la gelatina sin sabor en agua fría y déjala reposar durante unos 5 minutos, hasta que se hidrate y esponje.',
     Illustration: () => (
       <svg viewBox="0 0 360 220" className="w-full h-full overflow-visible">
         <SharedDefs />
@@ -190,8 +190,8 @@ const STEPS = [
   },
   {
     num: 2,
-    title: 'Formulacion',
-    text: 'Toma tu gelatina hidratada y combínala con tu endulzante (azúcar o panela) y pigmento natural favorito.',
+    title: 'Formulación',
+    text: 'Toma tu gelatina hidratada y combínala con tu endulzante (azúcar o panela) y tu pigmento natural favorito.',
     Illustration: () => (
       <svg viewBox="0 0 360 220" className="w-full h-full overflow-visible">
         <SharedDefs />
@@ -266,7 +266,7 @@ const STEPS = [
   {
     num: 4,
     title: 'Cocción',
-    text: 'Lleva la mezcla a la marmita. Mantén la temperatura por debajo de 40°C (pitahaya) o dentro del límite de la receta para no degradar el color natural.',
+    text: 'Lleva la mezcla a la marmita. Mantén la temperatura dentro del límite de la receta para no degradar el color natural.',
     Illustration: () => (
       <svg viewBox="0 0 360 220" className="w-full h-full overflow-visible">
         <SharedDefs />

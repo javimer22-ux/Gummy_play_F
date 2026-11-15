@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useGame } from '../../context/GameContext';
 import OrderTicketMini from './OrderTicketMini';
+import HelperCharacter from '../HelperCharacter';
 
 /* Plantilla maestra de la vista ampliada (mismas clases gl-zoom* que la Estación de Hidratación):
    footer con título + botón de acercar, y overlay a pantalla completa con
@@ -81,8 +82,24 @@ export function useStationGuide() {
   return { isTutorial, stepDone, hint: isTutorial || idle };
 }
 
-export default function ZoomShell({ badge, num, title, isZoomedIn, onOpen, onConfirm, machine, machineClass = '', helper = null, children }) {
-  const { stepDone, hint } = useStationGuide();
+/* Fotografía de la ventana del fondo según la estación (1 a 7) */
+const STATION_WINDOWS = { 1: '/assets/ventana-1.jpg', 2: '/assets/ventana-2.jpg', 3: '/assets/ventana-3.jpg', 4: '/assets/ventana-4.jpg', 5: '/assets/ventana-5.jpg', 6: '/assets/ventana-6.jpg', 7: '/assets/ventana-7.jpg' };
+
+/* Diálogos del tutorial por estación: [pendiente, completada] */
+const TUTORIAL_TEXT = {
+  1: ['Espolvorea la gelatina sin sabor en agua fría y espera a que esponje.', "¡Gelatina hidratada! Pulsa 'Confirmar y alejar cámara'."],
+  2: ['Elige el endulzante y el pigmento natural que pide la orden arriba.', "¡Ingredientes listos! Pulsa 'Confirmar y alejar cámara'."],
+  3: ["Presiona 'Agitar' hasta llevar la homogeneidad al 100%.", '¡Mezcla 100% homogénea! Confirma y aleja la cámara.'],
+  4: ['Calienta dentro del rango marcado por las flechitas sin pasarte del límite del pigmento.', '¡Temperatura perfecta! Confirma y aleja la cámara.'],
+  5: ['Selecciona el molde exacto del pedido y vierte la mezcla.', '¡Moldes llenos! Confirma y aleja la cámara.'],
+  6: ['Enfría hasta la zona marcada por las flechitas para solidificar las gomitas.', '¡Gomitas firmes y desmoldadas! Sal para ir a Control de Calidad.'],
+};
+export const tutorialText = (n, done) => TUTORIAL_TEXT[n]?.[done ? 1 : 0];
+
+export default function ZoomShell({ badge, num, title, isZoomedIn, onOpen, onConfirm, machine, machineClass = '', helper = null, done = false, children }) {
+  const { isTutorial, stepDone, hint } = useStationGuide();
+  const tut = isTutorial ? tutorialText(parseInt(num, 10), done) : null;
+  const windowSrc = STATION_WINDOWS[parseInt(num, 10)] || '/assets/fondo-nanegal.jpg';
 
   // Con la vista abierta, los atajos de teclado de la cinta no deben actuar
   useEffect(() => {
@@ -95,7 +112,16 @@ export default function ZoomShell({ badge, num, title, isZoomedIn, onOpen, onCon
   const zoomView = isZoomedIn && (
     <div className="gl-zoom" role="dialog" aria-modal="true" aria-label={title}>
       <div className="gl-zoom__scene" aria-hidden="true">
-        <div className="gl-zoom__window" />
+        <div
+          className="gl-zoom__window"
+          style={{
+            // capas (de arriba a abajo): reflejos del vidrio, fotografía y cielo de respaldo si la imagen no carga
+            backgroundImage: `linear-gradient(115deg, rgba(255,255,255,.24) 0 14%, transparent 14% 27%, rgba(255,255,255,.13) 27% 33%, transparent 33%), url(${windowSrc}), linear-gradient(#9fdcff, #d6f1ff)`,
+            backgroundSize: '100% 100%, cover, 100% 100%',
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat',
+          }}
+        />
         <div className="gl-zoom__floor" />
         <div className="gl-zoom__belt" />
       </div>
@@ -114,7 +140,7 @@ export default function ZoomShell({ badge, num, title, isZoomedIn, onOpen, onCon
 
       {/* Pie oscuro: ayudante a la izquierda/centro, botón verde a la derecha */}
       <div className="gl-zoom__footer flex w-full items-center justify-between px-8">
-        <div className="flex min-w-0 flex-1 justify-center">{helper}</div>
+        <div className="flex min-w-0 flex-1 justify-center">{tut ? <HelperCharacter key={String(done)} text={tut} /> : helper}</div>
         <div className="gl-zoom__exit">
           <button onClick={onConfirm} className="gl-btn gl-btn--xl">
             <span className="gl-zoom__tick">✔</span>

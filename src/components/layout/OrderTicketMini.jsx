@@ -8,7 +8,8 @@ const mmss = (sec) => `${String(Math.floor(Math.max(0, sec) / 60)).padStart(2, '
 
 /** Mini-ticket del pedido activo para la vista ampliada (forma, sabor y base solicitados). */
 export default function OrderTicketMini() {
-  const { activeOrders } = useGame();
+  const { activeOrders, config } = useGame();
+  const isTutorial = config?.orderCount === 1;
   const order = activeOrders[0];
   if (!order) return null;
 
@@ -26,9 +27,9 @@ export default function OrderTicketMini() {
           <p className="gl-zoom__order-tag">PEDIDO {order.id}</p>
           <p
             className={`m-0 inline-flex items-center gap-1 text-sm font-extrabold tabular-nums ${low ? 'text-red-300 gl-pulse' : 'text-white'}`}
-            aria-label={`Tiempo restante ${mmss(order.timeRemaining)}`}
+            aria-label={isTutorial ? 'Tutorial sin límite de tiempo' : `Tiempo restante ${mmss(order.timeRemaining)}`}
           >
-            <ClockIcon size={14} />{mmss(order.timeRemaining)}
+            {isTutorial ? '🎓 TUTORIAL · SIN TIEMPO' : <><ClockIcon size={14} />{mmss(order.timeRemaining)}</>}
           </p>
         </div>
         <p className="gl-zoom__order-line"><b>Forma:</b> {shapeName}</p>

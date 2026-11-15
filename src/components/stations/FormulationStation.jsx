@@ -120,6 +120,7 @@ export default function FormulationStation() {
 
   return (
     <ZoomShell
+      done={Boolean(base && pigment)}
       helper={<HelperCharacter text="¡Cada ingrediente cuenta! ⚗️ Combina los componentes para crear la fórmula perfecta." />}
       badge={['#8fb4ff', '#3f6fe6']} num="2" title="02. FORMULACIÓN"
       isZoomedIn={isZoomedIn} onOpen={() => setIsZoomedIn(true)} onConfirm={confirm}

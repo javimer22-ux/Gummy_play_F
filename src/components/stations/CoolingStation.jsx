@@ -120,6 +120,7 @@ export default function CoolingStation() {
 
   return (
     <ZoomShell
+      done={Boolean(done)}
       helper={<HelperCharacter text="¡Paciencia, que ya casi están listas! 🧊 Deja que las gomitas se enfríen." />}
       badge={['#8fb4ff', '#3f6fe6']} num="6" title="06. ENFRIAMIENTO (TÚNEL DE FRÍO)"
       isZoomedIn={isZoomedIn} onOpen={() => setIsZoomedIn(true)} onConfirm={confirm}

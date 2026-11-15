@@ -93,6 +93,7 @@ export default function MixingStation() {
 
   return (
     <ZoomShell
+      done={level >= 100}
       helper={<HelperCharacter text="¡Nuestra mezcla empieza a tomar color!" />}
       badge={['#d2b3ff', '#8b4fe8']} num="3" title="03. MEZCLADO"
       isZoomedIn={isZoomedIn} onOpen={() => setIsZoomedIn(true)} onConfirm={confirm}

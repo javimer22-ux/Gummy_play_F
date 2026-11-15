@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Gummy from './components/entities/Gummy';
 import InstructionsModal from './components/InstructionsModal';
 
@@ -200,9 +200,20 @@ const UI_CONFIG = {
   },
 };
 
+const INTRO_VIDEO_SRC = '/assets/intro.mp4'; // video de introducción (public/assets/)
+
 export default function StartScreen({ onPlay }) {
   const { bloque, titulo, subtitulo, boton } = UI_CONFIG;
   const [showInstructions, setShowInstructions] = useState(false);
+  const [showIntro, setShowIntro] = useState(false);
+
+  // Escape cierra el video de introducción
+  useEffect(() => {
+    if (!showIntro) return undefined;
+    const onKey = (e) => { if (e.key === 'Escape') setShowIntro(false); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [showIntro]);
 
   return (
     <div className="gl-app relative h-screen w-screen overflow-hidden" style={{ minHeight: 0 }}>
@@ -272,6 +283,15 @@ export default function StartScreen({ onPlay }) {
             <span aria-hidden="true">📖</span>
             INSTRUCCIONES
           </button>
+
+          <button
+            type="button"
+            onClick={() => setShowIntro(true)}
+            className="rounded-full border-[5px] border-white bg-gradient-to-b from-amber-300 via-amber-400 to-orange-500 text-indigo-950 shadow-[0_10px_0_#b45309,0_18px_28px_rgba(20,0,60,.45)] font-extrabold transition-transform duration-100 hover:-translate-y-1 hover:brightness-110 active:translate-y-2 active:shadow-[0_2px_0_#b45309,0_6px_12px_rgba(20,0,60,.4)]"
+            style={{ fontSize: 22, padding: '18px 36px' }}
+          >
+            🎬 VER HISTORIA
+          </button>
         </div>
       </div>
 
@@ -279,6 +299,28 @@ export default function StartScreen({ onPlay }) {
         isOpen={showInstructions}
         onClose={() => setShowInstructions(false)}
       />
+
+      {showIntro && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/90 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-label="Introducción">
+          <div className="relative w-full max-w-4xl overflow-hidden rounded-[28px] border-[5px] border-white bg-black shadow-[0_14px_40px_rgba(0,0,0,.7)]">
+            <button
+              type="button"
+              onClick={() => setShowIntro(false)}
+              className="absolute right-3 top-3 z-10 rounded-full border-4 border-white bg-rose-500 px-4 py-1.5 text-sm font-black text-white shadow-[0_4px_0_#9f1239]"
+            >
+              SALTAR INTRO ⏭
+            </button>
+            <video
+              src={INTRO_VIDEO_SRC}
+              autoPlay
+              controls
+              playsInline
+              onEnded={() => setShowIntro(false)}
+              className="max-h-[78dvh] w-full bg-black object-contain"
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

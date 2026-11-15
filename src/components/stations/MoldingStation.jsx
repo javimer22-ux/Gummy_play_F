@@ -70,6 +70,7 @@ export default function MoldingStation() {
   const name = shapes.find((s) => s.id === pick)?.name;
   return (
     <ZoomShell
+      done={Boolean(pick)}
       helper={<HelperCharacter text="¡Que tu creatividad tome forma! Vierte la mezcla en los moldes." />}
       badge={['#ffc16b', '#f27a14']} num="5" title="05. MOLDEADO"
       isZoomedIn={isZoomedIn} onOpen={() => setIsZoomedIn(true)} onConfirm={confirm}

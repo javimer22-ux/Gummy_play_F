@@ -93,7 +93,7 @@ function GameBoard({ onExit, onSettings }) {
   // Pedido caducado: el reloj del pedido activo llegó a 0
   const orderExpired = Boolean(current) && current.timeRemaining <= 0 && activeTray.station < LAST_STATION;
   // Sonido: alerta cuando el tiempo del pedido está por acabarse
-  useEffect(() => { const t = current?.timeRemaining; if (isPlaying && (t === 15 || (t <= 5 && t > 0))) sfx.warning(); }, [current?.timeRemaining]);
+  useEffect(() => { const t = current?.timeRemaining; if (isPlaying && !isTutorial && (t === 15 || (t <= 5 && t > 0))) sfx.warning(); }, [current?.timeRemaining, isTutorial]);
 
   // Reglas de la cinta: ← no baja de la primera estación; se bloquean en pausa, en QA, con alertas y al terminar
   const blocked = gameFinished || orderExpired || confirming;
@@ -151,8 +151,8 @@ function GameBoard({ onExit, onSettings }) {
               <div className="flex-1 min-w-0">
                 <div className="flex justify-between items-center gap-2">
                   <span className="gl-ticket__tag">LOTE ACTUAL: {current.id}</span>
-                  <span className={`font-extrabold tabular-nums ${current.timeRemaining < 15 ? 'text-red-600 gl-pulse' : ''}`}>
-                    {formatTime(current.timeRemaining)}
+                  <span className={`font-extrabold tabular-nums ${!isTutorial && current.timeRemaining < 15 ? 'text-red-600 gl-pulse' : ''}`}>
+                    {isTutorial ? '🎓 TUTORIAL · SIN TIEMPO' : formatTime(current.timeRemaining)}
                   </span>
                 </div>
                 <p className="font-extrabold leading-tight mt-0.5">{current.title}</p>

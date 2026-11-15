@@ -3,7 +3,8 @@ import { useGame } from '../context/GameContext';
 import { LAST_STATION } from '../constants/stations';
 
 export const useGameLoop = () => {
-  const { isPlaying, activeOrders, setActiveOrders, activeTray } = useGame();
+  const { isPlaying, activeOrders, setActiveOrders, activeTray, config } = useGame();
+  const isTutorial = config?.orderCount === 1; // el tutorial no tiene límite de tiempo
   const orderTimeLeft = activeOrders[0]?.timeRemaining;
 
   const lastTickRef = useRef(Date.now());
@@ -11,7 +12,7 @@ export const useGameLoop = () => {
   useEffect(() => {
     // Se detiene si el juego está pausado, no quedan pedidos, estamos en la pantalla de QA (última estación)
     // o el pedido activo se quedó sin tiempo (lo gestiona la alerta de tiempo agotado)
-    if (!isPlaying || activeOrders.length === 0 || activeTray.station >= LAST_STATION || orderTimeLeft <= 0) {
+    if (!isPlaying || activeOrders.length === 0 || activeTray.station >= LAST_STATION || orderTimeLeft <= 0 || isTutorial) {
       // Actualizamos la referencia para que no haya "saltos" de tiempo al despausar
       lastTickRef.current = Date.now();
       return;
@@ -42,5 +43,5 @@ export const useGameLoop = () => {
     }, 100);
 
     return () => clearInterval(intervalId);
-  }, [isPlaying, activeOrders.length, setActiveOrders, activeTray.station, orderTimeLeft]);
+  }, [isPlaying, activeOrders.length, setActiveOrders, activeTray.station, orderTimeLeft, isTutorial]);
 };
