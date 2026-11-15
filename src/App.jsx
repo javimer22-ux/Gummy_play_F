@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect, useState } from 'react';
 import { sfx, setSoundEnabled } from './utils/soundEngine';
 import StartScreen from './StartScreen';
+import Watermark from './components/Watermark';
 import SetupScreen from './SetupScreen';
 import { GameProvider, useGame } from './context/GameContext';
 import { useGameLoop } from './hooks/useGameLoop';
@@ -286,7 +287,12 @@ function AppInner() {
   }, []);
 
   if (gameState === 'START') {
-    return <StartScreen onPlay={() => setGameState('CONFIG')} />;
+    return (
+      <>
+        <StartScreen onPlay={() => setGameState('CONFIG')} />
+        <Watermark />
+      </>
+    );
   }
   if (gameState === 'CONFIG') {
     return (
@@ -363,8 +369,8 @@ function emitRules(rules, out, imports) {
   for (const r of rules) {
     if (r.type === 3) imports.push(r.cssText); // @import
     else if (r.type === 4) { // @media
-      // el aviso de girar el teléfono usa la orientación REAL del dispositivo
-      const real = r.cssText.includes('gl-rotate-hint');
+      // el aviso de girar el teléfono y la marca de agua usan el tamaño REAL del dispositivo
+      const real = r.cssText.includes('gl-rotate-hint') || r.cssText.includes('gl-watermark');
       if (real ? window.matchMedia(r.media.mediaText).matches : matchesBase(r.media.mediaText)) emitRules(r.cssRules, out, imports);
     } else if (r.type === 1) out.push(`${r.selectorText}{${toBaseUnits(r.style.cssText)}}`); // regla normal
     else if (r.type === 12) { out.push(`@supports ${r.conditionText}{`); emitRules(r.cssRules, out, imports); out.push('}'); }
