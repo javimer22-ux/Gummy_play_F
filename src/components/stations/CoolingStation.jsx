@@ -62,6 +62,36 @@ function Tunnel({ temp, on, shape, color }) {
   );
 }
 
+/* Termómetro vertical (solo visual): degradado cálido → glaciar y franja ideal 4–10°C entre dos flechitas ▶ */
+const T_TOP = START_TEMP, T_SPAN = START_TEMP - MIN_TEMP;
+const topPct = (t) => ((T_TOP - Math.min(START_TEMP, Math.max(MIN_TEMP, t))) / T_SPAN) * 100;
+function Thermo({ temp, inZone }) {
+  const bandTop = topPct(10), bandH = topPct(4) - topPct(10);
+  const pill = 'absolute -translate-y-1/2 rounded-full bg-slate-900/90 px-1.5 py-0.5 text-xs font-bold leading-none text-cyan-200 ring-1 ring-cyan-300/40';
+  return (
+    <div className="relative h-[150px] w-[92px] shrink-0" role="img" aria-label={`Termómetro ${Math.floor(temp)} grados, zona ideal 4 a 10`}>
+      {/* barra */}
+      <div className={`absolute left-[30px] top-0 h-full w-[18px] overflow-hidden rounded-full border-2 transition-all duration-200 ${inZone ? 'border-emerald-300 shadow-[0_0_12px_rgba(110,255,200,.9)]' : 'border-white/40'}`}
+        style={{ background: 'linear-gradient(180deg,#ff3b30 0%,#ff9f0a 22%,#ffe066 40%,#7ee8ff 65%,#3aa0ff 85%,#9fd8ff 100%)' }}>
+        {/* franja ideal */}
+        <div className={`absolute inset-x-0 border-y-2 ${inZone ? 'animate-pulse border-white bg-emerald-300/70 motion-reduce:animate-none' : 'border-white/80 bg-emerald-300/45'}`} style={{ top: `${bandTop}%`, height: `${bandH}%` }} />
+      </div>
+      {/* flechitas laterales */}
+      <span className="absolute left-[16px] -translate-y-1/2 text-xs font-bold leading-none text-emerald-300" style={{ top: `${bandTop}%` }} aria-hidden="true">▶</span>
+      <span className="absolute left-[16px] -translate-y-1/2 text-xs font-bold leading-none text-emerald-300" style={{ top: `${bandTop + bandH}%` }} aria-hidden="true">▶</span>
+      {/* etiquetas */}
+      <span className={`${pill} left-[54px]`} style={{ top: `${bandTop}%` }}>10°C</span>
+      <span className={`${pill} left-[54px]`} style={{ top: `${bandTop + bandH}%` }}>4°C</span>
+      {/* indicador actual */}
+      <div className={`absolute left-[24px] h-[4px] w-[30px] -translate-y-1/2 rounded-full bg-white transition-[top] duration-150 ease-linear ${inZone ? 'shadow-[0_0_10px_3px_rgba(110,255,200,.95)]' : 'shadow-[0_0_6px_rgba(255,255,255,.8)]'}`} style={{ top: `${topPct(temp)}%` }} />
+      {/* copos */}
+      {inZone && [[0, 22, 0], [2, 60, .4], [66, 8, .8]].map(([l, t, d]) => (
+        <span key={l} className="absolute animate-bounce text-xs motion-reduce:animate-none" style={{ left: l, top: `${t}%`, animationDelay: `${d}s`, animationDuration: '1.4s' }} aria-hidden="true">❄️</span>
+      ))}
+    </div>
+  );
+}
+
 export default function CoolingStation() {
   const { activeTray, setActiveTray, isPlaying } = useGame();
   const [isZoomedIn, setIsZoomedIn] = useState(false);
@@ -126,10 +156,17 @@ export default function CoolingStation() {
       isZoomedIn={isZoomedIn} onOpen={() => setIsZoomedIn(true)} onConfirm={confirm}
       machine={<Tunnel temp={temperature} on={isCooling} shape={activeTray.shape ?? 'cuadrado'} color={color} />}
     >
-      <div className="gl-zoom__inset">
-        <p className="gl-zoom__label">Temperatura</p>
-        <div className="gl-zoom__lcd gl-zoom__lcd--temp" style={{ color: tempColor }}>{Math.floor(temperature)}°C</div>
-        <p className="gl-zoom__label" style={{ marginTop: '.3rem', fontSize: '.7rem', opacity: .8 }}>Zona ideal: 4 – 10°C</p>
+      <div className="gl-zoom__inset flex items-center gap-2">
+        <div className="min-w-0 flex-1">
+          <p className="gl-zoom__label">Temperatura</p>
+          <div className="gl-zoom__lcd gl-zoom__lcd--temp" style={{ color: tempColor }}>{Math.floor(temperature)}°C</div>
+          {inZone && !done ? (
+            <p className="m-0 mt-1.5 animate-pulse rounded-full bg-cyan-400/25 px-2 py-0.5 text-center text-xs font-extrabold tracking-wide text-cyan-200 shadow-[0_0_10px_rgba(110,255,230,.55)] motion-reduce:animate-none">❄️ ¡TEMPERATURA IDEAL!</p>
+          ) : (
+            <p className="gl-zoom__label" style={{ marginTop: '.3rem', fontSize: '.7rem', opacity: .8 }}>Zona ideal: 4 – 10°C</p>
+          )}
+        </div>
+        <Thermo temp={temperature} inZone={inZone} />
       </div>
       <div className="gl-zoom__btns">
         <button onClick={() => setIsCooling(true)} disabled={done || isCooling || temperature <= MIN_TEMP || !isPlaying}

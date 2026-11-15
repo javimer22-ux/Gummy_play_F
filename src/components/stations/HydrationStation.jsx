@@ -75,7 +75,23 @@ function Pipe({ d, bands = [] }) {
   );
 }
 
-function HydrationMachine({ hasGelatin, started, hydrating, hasLumps, bloomed, ticks, color, canStart, onHopper }) {
+/* Anillo circular de progreso del reposo (solo visual): cian mientras avanza, esmeralda con resplandor al completarse */
+function ProgressRing({ pct, ready }) {
+  const R = 31, C = 2 * Math.PI * R;
+  return (
+    <div className="relative h-[76px] w-[76px] shrink-0" role="img" aria-label={`Progreso del reposo ${pct}%`}>
+      <svg viewBox="0 0 76 76" className={`h-full w-full -rotate-90 ${ready ? 'drop-shadow-[0_0_8px_rgba(52,211,153,.95)]' : 'drop-shadow-[0_0_4px_rgba(34,211,238,.6)]'}`}>
+        <circle cx="38" cy="38" r={R} fill="rgba(10,18,36,.55)" className="stroke-white/15" strokeWidth="6" />
+        <circle cx="38" cy="38" r={R} fill="none" strokeWidth="6" strokeLinecap="round"
+          className={`transition-[stroke-dashoffset] duration-100 ease-linear ${ready ? 'stroke-emerald-400' : 'stroke-cyan-400'}`}
+          strokeDasharray={C} strokeDashoffset={C * (1 - pct / 100)} />
+      </svg>
+      <span className={`absolute inset-0 flex items-center justify-center text-lg font-extrabold leading-none ${ready ? 'text-emerald-300' : 'text-white'}`}>{pct}%</span>
+    </div>
+  );
+}
+
+function HydrationMachine({ hasGelatin, started, hydrating, hasLumps, bloomed, ticks, color, canStart, onHopper, ready }) {
   const angle = ((ticks % MAX_TICKS) / MAX_TICKS) * 360;
   return (
     <svg viewBox="0 0 800 760" style={{ overflow: 'visible' }} role="img" aria-label="Máquina de hidratación">
@@ -185,6 +201,9 @@ function HydrationMachine({ hasGelatin, started, hydrating, hasLumps, bloomed, t
       {bloomed && [[300, 590], [420, 575], [530, 595]].map(([x, y], i) => (
         <path key={x} className="gl-twinkle" style={{ animationDelay: `${i * 0.25}s` }} d={`M${x} ${y} l5 12 12 5 -12 5 -5 12 -5 -12 -12 -5 12 -5z`} fill="#fff" />
       ))}
+      {ready && [[290, 588, 0], [405, 566, .35], [520, 590, .7]].map(([x, y, d]) => (
+        <text key={x} className="gl-twinkle" style={{ animationDelay: `${d}s` }} x={x} y={y} fontSize="40" textAnchor="middle" aria-hidden="true">✨</text>
+      ))}
       <ellipse cx="405" cy="600" rx="205" ry="34" fill="#e6f6ff" fillOpacity=".25" stroke={INK} strokeWidth="6" />
       <ellipse cx="405" cy="600" rx="190" ry="26" fill="none" stroke="#fff" strokeWidth="4" opacity=".7" />
       <path d="M226 650 Q240 712 300 730" stroke="#fff" strokeWidth="8" strokeLinecap="round" fill="none" opacity=".6" />
@@ -264,6 +283,10 @@ export default function HydrationStation() {
     setIsZoomedIn(false);
   };
 
+  // Solo visual: progreso hacia el tiempo ideal y estado "listo" (dentro de la ventana 05:00 – 05:30 o ya hidratada bien)
+  const ringPct = Math.min(100, Math.round((hydrationTime / IDEAL_MIN) * 100));
+  const ready = ((isHydrating || stopped) && hydrationTime >= IDEAL_MIN && hydrationTime <= IDEAL_MAX) || (finished && activeTray.hasLumps === false);
+
   let msg = { cls: 'idle', text: 'Espolvorea la gelatina y déjala reposar el tiempo justo.' };
   if (isHydrating) msg = { cls: 'idle', text: 'Hidratando… detén el reposo cuando creas que está lista.' };
   else if (stopped) msg = { cls: 'idle', text: `Reposo detenido en ${clock(hydrationTime)}. Confirma para evaluar.` };
@@ -295,7 +318,7 @@ export default function HydrationStation() {
           <HydrationMachine
             hasGelatin={hasGelatin} started={started} hydrating={isHydrating} hasLumps={activeTray.hasLumps}
             bloomed={finished && activeTray.hasLumps === false} ticks={hydrationTime}
-            color={gelatin.color} canStart={canStart} onHopper={start}
+            color={gelatin.color} canStart={canStart} onHopper={start} ready={ready}
           />
         </div>
 
@@ -316,10 +339,17 @@ export default function HydrationStation() {
 
             <div>
               <p className="gl-zoom__label">Reposo</p>
-              <div className="gl-zoom__inset gl-zoom__lcd"><SegDisplay text={clock(hydrationTime)} /></div>
-              <p className="gl-zoom__label" style={{ textAlign: 'center', marginTop: '.35rem' }}>
-                Detén entre {clock(IDEAL_MIN)} y {clock(IDEAL_MAX)}
-              </p>
+              <div className="flex items-center gap-3">
+                <div className="gl-zoom__inset gl-zoom__lcd min-w-0 flex-1"><SegDisplay text={clock(hydrationTime)} /></div>
+                <ProgressRing pct={ringPct} ready={ready} />
+              </div>
+              {ready ? (
+                <p className="m-0 mt-1.5 animate-pulse rounded-full bg-emerald-500/25 px-3 py-0.5 text-center text-xs font-extrabold tracking-wide text-emerald-300 shadow-[0_0_10px_rgba(52,211,153,.55)] motion-reduce:animate-none">✅ ¡GELATINA LISTA!</p>
+              ) : (
+                <p className="gl-zoom__label" style={{ textAlign: 'center', marginTop: '.35rem' }}>
+                  Detén entre {clock(IDEAL_MIN)} y {clock(IDEAL_MAX)}
+                </p>
+              )}
             </div>
 
             <div className="gl-zoom__btns">

@@ -258,7 +258,7 @@ function GameBoard({ onExit, onSettings }) {
       {/* CONFIRMAR REINICIO */}
       {confirming && (
         <div className="gl-modal">
-          <div className="gl-report gl-report--shift" role="alertdialog" style={{ maxWidth: '26rem' }}>
+          <div className="gl-report gl-report--shift" role="alertdialog" style={{ maxWidth: '26rem', overflow: 'visible', maxHeight: 'none', marginTop: '1.6rem' }}>
             <div className="gl-report__ribbon">¿REINICIAR PARTIDA?</div>
             <p className="font-bold mb-4" style={{ color: '#7458b0' }}>Perderás el progreso y los puntos de esta partida.</p>
             <div className="flex gap-3 justify-center">

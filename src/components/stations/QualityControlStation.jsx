@@ -5,7 +5,25 @@ import { useGame } from '../../context/GameContext';
 import Gummy from '../entities/Gummy';
 import ingredientsData from '../../data/ingredients.json';
 import shapesData from '../../data/shapes.json';
-import { ArrowIcon, CheckIcon, CrossIcon } from '../entities/Icons';
+
+/* ───────── Decoración del modal de resultado (solo visual) ───────── */
+const Spark = ({ className = '', delay = '0s', size = 20, color = '#fde047' }) => (
+  <svg viewBox="0 0 24 24" width={size} height={size} className={`absolute animate-ping motion-reduce:animate-none ${className}`} style={{ animationDelay: delay, animationDuration: '1.8s' }} aria-hidden="true">
+    <path d="M12 0 L14.6 9.4 L24 12 L14.6 14.6 L12 24 L9.4 14.6 L0 12 L9.4 9.4 Z" fill={color} />
+  </svg>
+);
+const CONFETTI = ['#fb7185', '#fde047', '#38bdf8', '#a78bfa', '#4ade80', '#fb923c'];
+const Confetti = () => (
+  <>
+    {CONFETTI.map((c, i) => (
+      <span key={i} aria-hidden="true" className="pointer-events-none absolute h-2.5 w-1.5 animate-bounce rounded-sm motion-reduce:animate-none"
+        style={{ background: c, left: `${8 + i * 16}%`, top: `${-4 + (i % 3) * 5}%`, animationDelay: `${i * 0.18}s`, animationDuration: `${1.2 + (i % 3) * 0.3}s`, transform: `rotate(${i * 35}deg)` }} />
+    ))}
+  </>
+);
+
+const BTN_GOLD = 'rounded-full border-4 border-white bg-gradient-to-b from-yellow-300 via-amber-400 to-orange-500 px-6 py-2.5 text-base font-extrabold tracking-wide text-white shadow-[0_6px_0_#b45309] transition-transform [-webkit-text-stroke:2px_#92400e] [paint-order:stroke_fill] hover:-translate-y-0.5 active:translate-y-1 active:shadow-[0_1px_0_#b45309]';
+const BTN_INDIGO = 'rounded-full border-4 border-white bg-gradient-to-b from-indigo-400 to-purple-600 px-6 py-2.5 text-base font-extrabold tracking-wide text-white shadow-[0_6px_0_#312e81] transition-transform [-webkit-text-stroke:2px_#312e81] [paint-order:stroke_fill] hover:-translate-y-0.5 active:translate-y-1 active:shadow-[0_1px_0_#312e81]';
 
 const shapeName = (id) => shapesData.find((s) => s.id === id)?.name ?? id ?? 'ninguno';
 
@@ -67,8 +85,8 @@ export default function QualityControlStation() {
         isSuccess = false;
       }
 
-      // Cocción mínima: la gelatina (activationTemp 60°C) debe disolverse; con pigmento delicado (Pitahaya) basta 25°C
-      const minCookTemp = (activeTray.pigment?.maxTemp ?? 90) <= 40 ? 25 : 60;
+      // Cocción mínima: la gelatina (activationTemp 60°C) debe disolverse; con pigmento delicado (Pitahaya) basta 30°C
+      const minCookTemp = (activeTray.pigment?.maxTemp ?? 90) <= 40 ? 30 : 60; // igual que el MÍN que muestra la Cocción
       const cookedTemp = activeTray.cookTemp ?? activeTray.temperature; // `temperature` ya fue sobrescrita por Enfriamiento
       if (!activeTray.burned && cookedTemp < minCookTemp) {
         errors.push(`Cocción insuficiente (${Math.floor(cookedTemp)}°C). Debías calentar al menos a ${minCookTemp}°C para disolver la gelatina.`);
@@ -129,52 +147,93 @@ export default function QualityControlStation() {
 
   // Visual: gomita resultante (color de la mezcla o del pigmento elegido)
   const gummyColor = activeTray.pigment?.color ?? activeTray.base?.color;
+  const ok = report.success;
+  const pal = ok
+    ? { card: 'border-[#065f46] bg-[#f4fff9] shadow-[0_12px_0_#065f46,0_22px_28px_rgba(15,10,40,.4)]', ribbon: 'from-emerald-300 via-emerald-500 to-green-700 shadow-[inset_0_0_0_3px_#6ee7b7,0_6px_0_#064e3b] [-webkit-text-stroke:2px_#064e3b]', dash: 'border-emerald-400', head: 'text-emerald-800' }
+    : { card: 'border-[#881337] bg-[#fff5f7] shadow-[0_12px_0_#881337,0_22px_28px_rgba(15,10,40,.4)]', ribbon: 'from-rose-400 via-red-500 to-red-700 shadow-[inset_0_0_0_3px_#fda4af,0_6px_0_#7f1d1d] [-webkit-text-stroke:2px_#7f1d1d]', dash: 'border-rose-400', head: 'text-rose-800' };
 
   return (
-    <div className="w-full h-full flex flex-col items-center justify-center p-4">
-      <div className={`gl-report ${report.success ? '' : 'gl-report--bad'}`}>
-        <div className="gl-report__ribbon">
-          {report.success ? <CheckIcon size={26} /> : <CrossIcon size={26} />}
-          {report.success ? 'LOTE APROBADO' : 'LOTE RECHAZADO'}
-        </div>
-
-        <div className="flex justify-center">
-          <Gummy
-            shape={activeTray.shape ?? 'cuadrado'} color={gummyColor} size={92}
-            wobble={report.success} sparkle={report.success}
-            className={report.success ? '' : 'gl-sad'}
-          />
-        </div>
-        {report.success && (
-          <p className="font-extrabold text-lg mt-1" style={{ color: '#d98a0c' }}>+{report.earnedPoints} PTS</p>
-        )}
-
-        <div className="gl-report__list">
-          <p className="font-extrabold text-sm uppercase tracking-wider mb-2" style={{ color: '#7458b0' }}>Reporte de Laboratorio:</p>
-          <ul>
-            {report.messages.map((msg, idx) => (
-              <li key={idx}>
-                <span className="gl-report__dot">{report.success ? <CheckIcon size={12} /> : <CrossIcon size={12} />}</span>
-                <span>{msg}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        <div className="mt-3 flex w-full flex-wrap items-center justify-between gap-3 rounded-2xl bg-slate-800/90 px-4 py-3">
-          <div className="min-w-0 flex-1">
-          </div>
-          {orderCount === 1 ? (
-            // Modo tutorial (1 pedido): reporte del lote con volver / jugar de nuevo. Sin Certificado.
-            <div className="flex flex-wrap gap-2">
-              <button onClick={() => { restartGame(); setIsPlaying(true); }} className="gl-btn gl-btn--gold gl-btn--xl">JUGAR DE NUEVO <ArrowIcon size={24} /></button>
-              <button onClick={config?.onExit} className="gl-btn gl-btn--xl">⌂ VOLVER AL INICIO</button>
+    <div className="fixed inset-0 z-50 flex overflow-y-auto bg-slate-950/75 p-4 pt-8 backdrop-blur-sm">
+      <style>{`@keyframes gl-qa-sway{0%,100%{transform:rotate(-7deg)}50%{transform:rotate(7deg)}}@keyframes gl-qa-alert{0%,100%{opacity:.35}50%{opacity:1}}@media (prefers-reduced-motion:reduce){.gl-qa-sway,.gl-qa-alert{animation:none!important}}`}</style>
+      {/* m-auto: centrado; en pantallas bajas se puede desplazar sin que el banner quede cortado */}
+      <div className="relative m-auto w-full max-w-lg px-2 pb-3 pt-6" role="dialog" aria-live="polite">
+        <div className={`relative w-full rounded-[30px] border-[5px] px-6 pb-6 pt-9 ${pal.card}`}>
+          {/* Banner 3D curvo */}
+          <div className="absolute -top-8 left-1/2 z-10 w-[88%] -translate-x-1/2 -rotate-1">
+            <div className={`flex items-center justify-center gap-2 rounded-[24px] border-[4px] border-white bg-gradient-to-b px-3 py-2 text-lg font-extrabold tracking-wide text-white [paint-order:stroke_fill] sm:text-2xl ${pal.ribbon}`}>
+              {ok ? '✅ ¡LOTE APROBADO!' : '❌ LOTE RECHAZADO'}
             </div>
-          ) : (
-            <button onClick={handleNextOrder} className="gl-btn gl-btn--gold gl-btn--xl">
-              {isLastOrder ? 'VER RESULTADOS' : 'SIGUIENTE PEDIDO'} <ArrowIcon size={24} />
-            </button>
-          )}
+            {ok ? (
+              <>
+                <Spark className="-left-5 -top-2" />
+                <Spark className="-right-5 -top-3" delay=".6s" />
+                <Spark className="-right-3 bottom-0" delay="1.1s" size={14} color="#ffffff" />
+                <Spark className="-left-3 bottom-0" delay=".3s" size={14} color="#ffffff" />
+              </>
+            ) : (
+              <>
+                <span className="gl-qa-alert absolute -left-6 top-1 text-xl" style={{ animation: 'gl-qa-alert 1s infinite' }} aria-hidden="true">🚨</span>
+                <span className="gl-qa-alert absolute -right-6 top-1 text-xl" style={{ animation: 'gl-qa-alert 1s .5s infinite' }} aria-hidden="true">🚨</span>
+              </>
+            )}
+          </div>
+
+          {ok && <Confetti />}
+
+          {/* Gomita protagonista */}
+          <div className="relative mt-5 flex justify-center">
+            {ok && (
+              <>
+                <Spark className="left-[28%] top-1" delay=".2s" size={18} />
+                <Spark className="right-[28%] top-3" delay=".8s" size={16} />
+                <Spark className="left-[34%] bottom-2" delay="1.2s" size={12} color="#ffffff" />
+              </>
+            )}
+            <div className={ok ? 'animate-bounce motion-reduce:animate-none' : 'gl-qa-sway'} style={ok ? undefined : { animation: 'gl-qa-sway 1.6s ease-in-out infinite' }}>
+              <Gummy
+                shape={activeTray.shape ?? 'cuadrado'} color={gummyColor} size={88}
+                sparkle={ok}
+                className={ok ? '' : 'gl-sad'}
+              />
+            </div>
+          </div>
+
+          {/* Puntos */}
+          <div className="mt-2 flex justify-center">
+            {ok ? (
+              <span className="rounded-full border-4 border-white bg-gradient-to-b from-yellow-300 to-amber-500 px-5 py-1 text-xl font-extrabold text-amber-950 shadow-[0_4px_0_#b45309]">+{report.earnedPoints} PTS</span>
+            ) : (
+              <span className="rounded-full border-4 border-white bg-slate-300 px-5 py-1 text-xl font-extrabold text-slate-600 shadow-[0_4px_0_#64748b]">0 PTS</span>
+            )}
+          </div>
+
+          {/* Reporte de laboratorio */}
+          <div className={`mt-4 rounded-2xl border-2 border-dashed bg-white/95 p-4 ${pal.dash}`}>
+            <p className={`m-0 mb-2 text-sm font-extrabold uppercase tracking-wider ${pal.head}`}>🔬 Reporte de laboratorio:</p>
+            <ul className="m-0 max-h-[200px] list-none space-y-1.5 overflow-y-auto p-0">
+              {report.messages.map((msg, idx) => (
+                <li key={idx} className={`flex items-start gap-2 text-sm font-bold leading-snug ${ok ? 'text-emerald-900' : 'text-rose-800'}`}>
+                  <span className="shrink-0" aria-hidden="true">{ok ? '✅' : '⚠️'}</span>
+                  <span>{msg}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Botones centrados */}
+          <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
+            {orderCount === 1 ? (
+              // Modo tutorial (1 pedido): reporte del lote con volver / jugar de nuevo. Sin Certificado.
+              <>
+                <button onClick={() => { restartGame(); setIsPlaying(true); }} className={BTN_GOLD}>🧸 JUGAR DE NUEVO ➔</button>
+                <button onClick={config?.onExit} className={BTN_INDIGO}>🏠 VOLVER AL INICIO</button>
+              </>
+            ) : (
+              <button onClick={handleNextOrder} className={BTN_GOLD}>
+                {isLastOrder ? 'VER RESUMEN DEL TURNO 🏆' : 'SIGUIENTE PEDIDO ➔'}
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </div>

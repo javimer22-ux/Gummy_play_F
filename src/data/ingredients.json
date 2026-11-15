@@ -2,7 +2,7 @@
   "bases": [
     {
       "id": "b1",
-      "name": "Agua ",
+      "name": "Agua",
       "type": "solvente",
       "color": "transparent"
     },
@@ -31,7 +31,7 @@
   "pigments": [
     {
       "id": "p1",
-      "name": "Cáscaras de Pitahaya",
+      "name": "Cáscara de Pitahaya",
       "compound": "Betalaínas",
       "color": "#ef4444",
       "maxTemp": 40,
@@ -47,18 +47,18 @@
     },
     {
       "id": "p3",
-      "name": "Cascara de Limón",
+      "name": "Cáscara de Limón",
       "compound": "Carotenoides",
       "color": "#eab308",
       "maxTemp": 90,
       "preparation": "Extracción acuosa",
       "variant": "Limón",
       "group": "citricos",
-      "groupName": "Cascaras de Cítricos"
+      "groupName": "Cáscaras de Cítricos"
     },
     {
       "id": "p4",
-      "name": "Cascara de Naranja",
+      "name": "Cáscara de Naranja",
       "variant": "Naranja",
       "group": "citricos",
       "groupName": "Ralladura de Cítricos",
@@ -69,7 +69,7 @@
     },
     {
       "id": "p5",
-      "name": "Cascara de Mandarina",
+      "name": "Cáscara de Mandarina",
       "variant": "Mandarina",
       "group": "citricos",
       "groupName": "Ralladura de Cítricos",
