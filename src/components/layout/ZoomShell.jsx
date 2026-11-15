@@ -1,5 +1,6 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { useGame } from '../../context/GameContext';
 import OrderTicketMini from './OrderTicketMini';
 
 /* Plantilla maestra de la vista ampliada (mismas clases gl-zoom* que la Estación de Hidratación):
@@ -46,7 +47,43 @@ export function Pipe({ d, bands = [] }) {
   );
 }
 
+/* ───────── Guía contextual: ¿ya se completó la acción de la estación? ¿hay que resaltar? ─────────
+   Tutorial (orderCount === 1): el resaltado está siempre activo.
+   Turnos reales (3, 5, infinito): apagado, salvo que pasen 8 s sin acciones en la estación (salvavidas). */
+const IDLE_MS = 8000;
+export function useStationGuide() {
+  const { activeTray, config } = useGame();
+  const isTutorial = config?.orderCount === 1;
+  const station = activeTray.station;
+  const stepDone = ({
+    1: activeTray.hasLumps !== null,
+    2: Boolean(activeTray.base && activeTray.pigment),
+    3: activeTray.mixLevel >= 100,
+    4: activeTray.temperature > 20,
+    5: Boolean(activeTray.shape),
+    6: Boolean(activeTray.finalTexture),
+  })[station] ?? false;
+
+  // "Acción" = pulsar un botón habilitado; cada una (o cambiar de estación) reinicia la cuenta de 8 s
+  const [idle, setIdle] = useState(false);
+  const [activity, setActivity] = useState(0);
+  useEffect(() => {
+    const onDown = (e) => { if (e.target.closest?.('button:not(:disabled)')) setActivity((n) => n + 1); };
+    window.addEventListener('pointerdown', onDown, true);
+    return () => window.removeEventListener('pointerdown', onDown, true);
+  }, []);
+  useEffect(() => {
+    setIdle(false);
+    const id = setTimeout(() => setIdle(true), IDLE_MS);
+    return () => clearTimeout(id);
+  }, [station, activity]);
+
+  return { isTutorial, stepDone, hint: isTutorial || idle };
+}
+
 export default function ZoomShell({ badge, num, title, isZoomedIn, onOpen, onConfirm, machine, machineClass = '', helper = null, children }) {
+  const { stepDone, hint } = useStationGuide();
+
   // Con la vista abierta, los atajos de teclado de la cinta no deben actuar
   useEffect(() => {
     if (!isZoomedIn) return undefined;
@@ -96,7 +133,10 @@ export default function ZoomShell({ badge, num, title, isZoomedIn, onOpen, onCon
       </div>
       <div className="gl-panel__body">
         <div className="gl-section" style={{ alignItems: 'center', justifyContent: 'center' }}>
-          <button onClick={onOpen} className="gl-btn gl-btn--gold gl-btn--xl">OPERAR ESTACIÓN</button>
+          <button
+            onClick={onOpen}
+            className={`gl-btn gl-btn--gold gl-btn--xl ${!isZoomedIn && !stepDone && hint ? '!ring-4 ring-amber-300 !animate-pulse !shadow-[0_0_20px_#fde047]' : ''}`}
+          >OPERAR ESTACIÓN</button>
         </div>
       </div>
       {zoomView && createPortal(zoomView, document.querySelector('.gl-app') ?? document.body)}

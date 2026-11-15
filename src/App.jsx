@@ -16,21 +16,41 @@ import QualityControlStation from './components/stations/QualityControlStation';
 import TimeUpModal from './components/layout/TimeUpModal';
 import ResultsModal from './components/layout/ResultsModal';
 import CertificateScreen from './components/layout/CertificateScreen';
+import { useStationGuide } from './components/layout/ZoomShell';
 import Gummy from './components/entities/Gummy';
 import { ArrowIcon, PauseIcon, PlayIcon, SpinIcon, StarIcon } from './components/entities/Icons';
 import { STATION, FIRST_STATION, LAST_STATION } from './constants/stations';
 import ingredientsData from './data/ingredients.json';
 import shapesData from './data/shapes.json';
 
-// Frases de la ingeniera guía según la estación en la que está la bandeja
-const HELPER_BY_STATION = {
-  [STATION.HYDRATION]: { text: ' Vamos a preparar gelatina. Entra a la máquina para hidratarla con agua fría.' },
-  [STATION.FORMULATION]: { text: '¡El momento de la verdad! Entra a la estación y elige tu base y pigmento.' },
-  [STATION.MIXING]: { text: '¡A mezclar se ha dicho! Entra y asegúrate de que todo quede homogéneo.' },
-  [STATION.HEATING]: { type: 'warning', text: '¡Atención aquí! Entra a cocinar, pero cuida que la temperatura no suba de lo indicado.' },
-  [STATION.MOLDING]: { text: '¡A darle forma! Entra y elige el molde correcto para tu pedido.' },
-  [STATION.COOLING]: { text: '¡Casi listos! Entra al túnel y detén el frío justo a tiempo.' },
-  [STATION.QUALITY]: { text: '¡Trabajo terminado! Veamos si la gomita cumple con las especificaciones.' },
+// Frases de la ingeniera guía: [antes de operar, después de operar] según el modo
+const NEXT_NAME = { 1: 'Formulación', 2: 'Mezclado', 3: 'Cocción', 4: 'Moldeado', 5: 'Enfriamiento', 6: 'Control de Calidad' };
+const HELPER_TUTORIAL = {
+  1: ['Vamos a preparar gelatina. Pulsa «Operar estación» para entrar a la máquina e hidratarla con agua fría.', '¡Gelatina hidratada!'],
+  2: ['Pulsa «Operar estación» y elige tu base y tu pigmento natural.', '¡Fórmula lista!'],
+  3: ['Pulsa «Operar estación» y agita varias veces hasta llegar al 100 %.', '¡Mezcla homogénea!'],
+  4: ['Pulsa «Operar estación», enciende el fuego y apágalo antes de pasar la temperatura indicada.', '¡Cocción lista!'],
+  5: ['Pulsa «Operar estación» y elige el molde que pide el pedido.', '¡Molde elegido!'],
+  6: ['Pulsa «Operar estación», enciende el túnel y desmolda entre 4 y 10 °C.', '¡Gelatina desmoldada!'],
+};
+const HELPER_SHORT = {
+  1: ['Hidratación: entra y detén el reposo en su punto.', 'Hidratación lista.'],
+  2: ['Formulación: elige base y pigmento.', 'Formulación lista.'],
+  3: ['Mezclado: agita hasta el 100 %.', 'Mezclado listo.'],
+  4: ['Cocción: apaga antes del límite.', 'Cocción lista.'],
+  5: ['Moldeado: elige el molde del pedido.', 'Moldeado listo.'],
+  6: ['Enfriamiento: desmolda entre 4 y 10 °C.', 'Enfriamiento listo.'],
+};
+const helperFor = (station, isTutorial, stepDone, hasLumps) => {
+  if (station === STATION.QUALITY) return { text: '¡Trabajo terminado! Veamos si la gomita cumple con las especificaciones.' };
+  const pair = (isTutorial ? HELPER_TUTORIAL : HELPER_SHORT)[station];
+  if (!pair) return null;
+  const type = station === STATION.HEATING ? 'warning' : undefined;
+  if (!stepDone) return { type, text: pair[0] };
+  const lumps = isTutorial && station === 1 && hasLumps === true ? ' (con grumos: afectará al Mezclado)' : '';
+  return { type, text: isTutorial
+    ? `${pair[1]}${lumps} Ahora pulsa la flecha derecha (→) para ir a ${NEXT_NAME[station]}.`
+    : `${pair[1]} Avanza a ${NEXT_NAME[station]} (→).` };
 };
 
 const formatTime = (seconds) => {
@@ -50,6 +70,7 @@ const describeOrder = (order) => {
 
 function GameBoard({ onExit, onSettings }) {
   useGameLoop();
+  const { isTutorial, stepDone, hint } = useStationGuide();
   const {
     isPlaying, setIsPlaying, activeOrders, activeTray, score, totalOrders, gameFinished,
     advanceConveyor, retreatConveyor, restartGame, runId, results,
@@ -176,7 +197,7 @@ function GameBoard({ onExit, onSettings }) {
             </button>
             <button
               onClick={advanceConveyor} disabled={!canAdvance}
-              className="gl-btn gl-btn--lime gl-btn--pill" aria-label="Avanzar a la siguiente estación" title="Avanzar (→)"
+              className={`gl-btn gl-btn--lime gl-btn--pill ${stepDone && activeTray.station < LAST_STATION && hint ? '!ring-4 ring-amber-300 !animate-bounce !shadow-[0_0_22px_#fde047]' : ''}`} aria-label="Avanzar a la siguiente estación" title="Avanzar (→)"
             >
               <ArrowIcon size={28} />
             </button>
@@ -223,8 +244,8 @@ function GameBoard({ onExit, onSettings }) {
       )}
 
       {/* PERSONAJE GUÍA: esquina inferior derecha de la vista general */}
-      {!gameFinished && HELPER_BY_STATION[activeTray.station] && (
-        <HelperCharacter variant="floating" {...HELPER_BY_STATION[activeTray.station]} />
+      {!gameFinished && helperFor(activeTray.station, isTutorial, stepDone, activeTray.hasLumps) && (
+        <HelperCharacter variant="floating" {...helperFor(activeTray.station, isTutorial, stepDone, activeTray.hasLumps)} />
       )}
 
       {/* ALERTA DE TIEMPO AGOTADO DEL PEDIDO / RESULTADOS FINALES */}
