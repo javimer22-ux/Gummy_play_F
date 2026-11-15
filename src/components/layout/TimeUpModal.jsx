@@ -1,9 +1,12 @@
+import { useEffect } from 'react';
+import { sfx } from '../../utils/soundEngine';
 import { useGame } from '../../context/GameContext';
 import Gummy from '../entities/Gummy';
 import { ArrowIcon, ClockIcon } from '../entities/Icons';
 
 /** Alerta cuando el pedido activo llega a 00:00: se pierde (0 puntos) y se pasa al siguiente. */
 export default function TimeUpModal() {
+  useEffect(() => { sfx.error(); }, []);
   const { activeOrders, activeTray, expireOrder } = useGame();
   const order = activeOrders[0];
   const upcoming = activeOrders[1];

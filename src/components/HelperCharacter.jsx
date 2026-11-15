@@ -22,7 +22,7 @@ function Compact({ text, warning, imgFailed, onImgError }) {
         )}
       </div>
       <div
-        className={`relative min-w-0 rounded-xl border bg-indigo-950/80 px-4 py-2 text-lg leading-snug text-white/90 shadow-lg ${
+        className={`relative min-w-0 rounded-xl border bg-indigo-950/80 px-4 py-2 text-xl leading-snug text-white/90 shadow-lg ${
           warning ? 'border-orange-500 shadow-[0_0_12px_rgba(249,115,22,.5)]' : 'border-white/10'
         }`}
       >
@@ -46,7 +46,7 @@ function Floating({ text, warning, imgFailed, onImgError }) {
       <div
         key={text}
         role={warning ? 'alert' : 'status'}
-        className={`animate-fade-in relative mb-32 w-60 max-w-full rounded-2xl border-2 bg-indigo-950/90 p-4 text-sm font-semibold leading-snug text-white shadow-xl backdrop-blur-sm ${
+        className={`animate-fade-in relative mb-32 w-60 max-w-full rounded-2xl border-2 bg-indigo-950/90 p-4 text-base font-semibold leading-snug text-white shadow-xl backdrop-blur-sm ${
           warning ? 'border-amber-400 shadow-[0_0_16px_rgba(251,191,36,.55)] animate-pulse' : 'border-white/20'
         }`}
       >
@@ -61,8 +61,7 @@ function Floating({ text, warning, imgFailed, onImgError }) {
       {!imgFailed && (
         <img
           src={AVATAR_SRC} alt="Ingeniera Agroindustrial, guía del laboratorio" draggable={false} onError={onImgError}
-          className="animate-fade-in h-[min(32vh,15rem)] w-auto shrink-0 select-none object-contain drop-shadow-[0_6px_6px_rgba(27,30,75,.4)]"
-        />
+className="animate-fade-in h-72 w-auto shrink-0 select-none object-contain drop-shadow-[0_6px_6px_rgba(27,30,75,.4)]"        />
       )}
     </div>
   );

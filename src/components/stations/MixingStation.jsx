@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { sfx } from '../../utils/soundEngine';
 import { useGame } from '../../context/GameContext';
 import HelperCharacter from '../HelperCharacter';
 import ZoomShell, { INK, Pipe } from '../layout/ZoomShell';
@@ -59,12 +60,18 @@ export default function MixingStation() {
   const [shake, setShake] = useState(false);
   const timer = useRef(null);
   useEffect(() => () => clearTimeout(timer.current), []);
+  const soundTimer = useRef(null); // sonido: el motor suena mientras haya clics recientes
+  useEffect(() => () => { clearTimeout(soundTimer.current); sfx.stopAllLoops(); }, []);
 
   const lumps = activeTray.hasLumps === true;
   const canMix = Boolean(pigment) && level < 100;
 
   const agitate = () => {
     if (!canMix) return;
+    sfx.startMixerLoop();
+    clearTimeout(soundTimer.current);
+    soundTimer.current = setTimeout(() => sfx.stopLoop('mixer'), 450);
+    if (level < 100 && level + (lumps ? STEP_LUMPS : STEP) >= 100) { sfx.ding(); clearTimeout(soundTimer.current); sfx.stopLoop('mixer'); }
     setLevel((l) => Math.min(100, l + (lumps ? STEP_LUMPS : STEP)));
     setSpin((s) => s + 90);
     if (lumps) { // atasco breve

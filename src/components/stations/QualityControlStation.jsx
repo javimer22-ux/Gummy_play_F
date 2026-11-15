@@ -1,5 +1,6 @@
 import HelperCharacter from '../HelperCharacter';
 import { useEffect, useState } from 'react';
+import { sfx } from '../../utils/soundEngine';
 import { useGame } from '../../context/GameContext';
 import Gummy from '../entities/Gummy';
 import ingredientsData from '../../data/ingredients.json';
@@ -9,10 +10,14 @@ import { ArrowIcon, CheckIcon, CrossIcon } from '../entities/Icons';
 const shapeName = (id) => shapesData.find((s) => s.id === id)?.name ?? id ?? 'ninguno';
 
 export default function QualityControlStation() {
-  const { activeTray, activeOrders, recordResult, nextOrder } = useGame();
+  const { activeTray, activeOrders, recordResult, nextOrder, restartGame, setIsPlaying, config } = useGame();
+  const orderCount = config?.orderCount;
+  // El pedido que cierra un turno de 3 o 5 pedidos NO muestra el reporte individual: salta directo al certificado o al resumen
+  const closesShift = (orderCount === 3 || orderCount === 5) && activeOrders.length <= 1;
   const [report, setReport] = useState(null);
 
   useEffect(() => {
+    sfx.scanSweep();
     try {
       const currentOrder = activeOrders[0]; 
       
@@ -23,6 +28,14 @@ export default function QualityControlStation() {
 
       let errors = [];
       let isSuccess = true;
+
+      // 0. Validación de Hidratación (Estación 1): la gelatina debe detenerse entre 05:00 y 05:30
+      if (activeTray.hasLumps !== false) {
+        errors.push(activeTray.hasLumps === true
+          ? 'Hidratación fuera de tiempo ideal (05:00 - 05:30): gelatina con grumos.'
+          : 'Hidratación omitida: la gelatina nunca se hidrató (05:00 - 05:30).');
+        isSuccess = false;
+      }
 
       // 1. Validación de Endulzante (Base)
       if (!activeTray.base || activeTray.base.id !== currentOrder.targetSpecs.sweetener) {
@@ -54,6 +67,14 @@ export default function QualityControlStation() {
         isSuccess = false;
       }
 
+      // Cocción mínima: la gelatina (activationTemp 60°C) debe disolverse; con pigmento delicado (Pitahaya) basta 25°C
+      const minCookTemp = (activeTray.pigment?.maxTemp ?? 90) <= 40 ? 25 : 60;
+      const cookedTemp = activeTray.cookTemp ?? activeTray.temperature; // `temperature` ya fue sobrescrita por Enfriamiento
+      if (!activeTray.burned && cookedTemp < minCookTemp) {
+        errors.push(`Cocción insuficiente (${Math.floor(cookedTemp)}°C). Debías calentar al menos a ${minCookTemp}°C para disolver la gelatina.`);
+        isSuccess = false;
+      }
+
       // 4. Validación de Mezcla
       if (activeTray.mixLevel < 100) {
         errors.push(`Mezcla heterogénea. Faltó tiempo de agitación en la estación de Mezclado.`);
@@ -73,12 +94,16 @@ export default function QualityControlStation() {
       });
 
       // Aprobado: suma los puntos del pedido. Rechazado: 0 puntos y se pasa al siguiente pedido.
+      if (!closesShift) isSuccess ? sfx.success(0.75) : sfx.error(0.75);
       recordResult({
         id: currentOrder.id,
         title: currentOrder.title,
         status: isSuccess ? 'approved' : 'failed',
         points: isSuccess ? currentOrder.reward : 0
       });
+
+      // Último pedido del turno (3 o 5): cierra la cola ya, sin pasar por el modal individual
+      if (closesShift) nextOrder();
 
     } catch (error) {
       console.error(error);
@@ -91,7 +116,7 @@ export default function QualityControlStation() {
   // Avanza al siguiente pedido (o a los resultados si era el último) y limpia la bandeja
   const handleNextOrder = () => nextOrder();
 
-  if (!report) {
+  if (!report || closesShift) {
     return (
       <div className="w-full h-full flex flex-col items-center justify-center p-4">
         <h2 className="text-2xl font-extrabold text-yellow-300 gl-pulse flex items-center gap-3">
@@ -138,11 +163,18 @@ export default function QualityControlStation() {
 
         <div className="mt-3 flex w-full flex-wrap items-center justify-between gap-3 rounded-2xl bg-slate-800/90 px-4 py-3">
           <div className="min-w-0 flex-1">
-            <HelperCharacter text="¡Es hora de la inspección final! 🏆 Comprueba que cumplan con el pedido." />
           </div>
-          <button onClick={handleNextOrder} className="gl-btn gl-btn--gold gl-btn--xl">
-            {isLastOrder ? 'VER RESULTADOS' : 'SIGUIENTE PEDIDO'} <ArrowIcon size={24} />
-          </button>
+          {orderCount === 1 ? (
+            // Modo tutorial (1 pedido): reporte del lote con volver / jugar de nuevo. Sin Certificado.
+            <div className="flex flex-wrap gap-2">
+              <button onClick={() => { restartGame(); setIsPlaying(true); }} className="gl-btn gl-btn--gold gl-btn--xl">JUGAR DE NUEVO <ArrowIcon size={24} /></button>
+              <button onClick={config?.onExit} className="gl-btn gl-btn--xl">⌂ VOLVER AL INICIO</button>
+            </div>
+          ) : (
+            <button onClick={handleNextOrder} className="gl-btn gl-btn--gold gl-btn--xl">
+              {isLastOrder ? 'VER RESULTADOS' : 'SIGUIENTE PEDIDO'} <ArrowIcon size={24} />
+            </button>
+          )}
         </div>
       </div>
     </div>

@@ -1,3 +1,5 @@
+import { useEffect } from 'react';
+import { sfx } from '../../utils/soundEngine';
 import { useGame } from '../../context/GameContext';
 import Gummy from '../entities/Gummy';
 import { ArrowIcon, CheckIcon, ClockIcon, CrossIcon, StarIcon } from '../entities/Icons';
@@ -9,14 +11,16 @@ const STATUS = {
 };
 
 /** Pantalla final de la partida: pedidos aprobados, estrellas y puntaje. */
-export default function ResultsModal() {
-  const { results, score, totalOrders, restartGame } = useGame();
+export default function ResultsModal({ onExit }) {
+  useEffect(() => { sfx.error(); }, []);
+  const { results, score, totalOrders, restartGame, setIsPlaying } = useGame();
+  const retry = () => { restartGame(); setIsPlaying(true); }; // reinicia el turno y arranca de una vez
   const approved = results.filter((r) => r.status === 'approved').length;
 
   return (
     <div className="gl-modal">
       <div className="gl-report gl-report--shift" role="dialog" aria-live="polite">
-        <div className="gl-report__ribbon">PARTIDA TERMINADA</div>
+        <div className="gl-report__ribbon">RESUMEN DE FIN DE TURNO</div>
 
         <div className="gl-stars" aria-label={`${approved} de ${totalOrders} pedidos aprobados`}>
           {Array.from({ length: totalOrders }).map((_, i) => (
@@ -33,6 +37,10 @@ export default function ResultsModal() {
           <StarIcon size={34} />{score} PTS
         </p>
 
+        <p className="m-0 mt-1 rounded-xl bg-amber-100 px-3 py-2 text-center text-sm font-extrabold text-amber-900">
+          🏆 Para obtener el Certificado de Excelencia Agroindustrial debes completar todos los pedidos del turno sin errores.
+        </p>
+
         <ul className="gl-results">
           {results.map((r) => {
             const st = STATUS[r.status];
@@ -46,10 +54,18 @@ export default function ResultsModal() {
           })}
         </ul>
 
-        <button onClick={restartGame} className="gl-btn gl-btn--gold gl-btn--xl">
-          <Gummy shape="osito" color="#ff3d5a" size={28} shadow={false} />
-          JUGAR DE NUEVO <ArrowIcon size={24} />
-        </button>
+        <div className="flex flex-wrap items-center justify-center gap-3">
+          <button onClick={retry} className="gl-btn gl-btn--gold gl-btn--xl">
+            <Gummy shape="osito" color="#ff3d5a" size={28} shadow={false} />
+            REINTENTAR TURNO <ArrowIcon size={24} />
+          </button>
+          <button
+            onClick={onExit}
+            className="rounded-full border-4 border-white/80 bg-gradient-to-b from-violet-400 to-indigo-600 px-6 py-3 text-lg font-extrabold tracking-wide text-white shadow-[0_5px_0_#3730a3] transition-transform hover:brightness-110 active:translate-y-1"
+          >
+            ⌂ VOLVER AL INICIO
+          </button>
+        </div>
       </div>
     </div>
   );

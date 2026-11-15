@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { sfx } from '../../utils/soundEngine';
 import { useGame } from '../../context/GameContext';
 import Gummy, { visibleColor } from '../entities/Gummy';
 import HelperCharacter from '../HelperCharacter';
@@ -76,6 +77,14 @@ export default function CoolingStation() {
     return () => clearInterval(id);
   }, [isCooling, isPlaying]);
 
+  // Sonido: flujo de aire frío mientras el túnel está encendido; limpieza al salir
+  useEffect(() => {
+    if (!isCooling || !isPlaying) return undefined;
+    sfx.startCoolingLoop();
+    return () => sfx.stopLoop('cooling');
+  }, [isCooling, isPlaying]);
+  useEffect(() => () => sfx.stopAllLoops(), []);
+
   // El túnel se apaga solo al tocar el mínimo
   useEffect(() => { if (temperature <= MIN_TEMP) setIsCooling(false); }, [temperature]);
 
@@ -89,6 +98,8 @@ export default function CoolingStation() {
     if (done) return;
     setIsCooling(false);
     setTexture(evaluateTexture(temperature));
+    sfx.unmoldPop();
+    evaluateTexture(temperature) === 'perfect' ? sfx.ding() : sfx.error();
   };
 
   // CONFIRMAR: guarda la textura en el estado global (si ya se desmoldó)

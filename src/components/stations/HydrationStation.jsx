@@ -1,6 +1,7 @@
 import HelperCharacter from '../HelperCharacter';
 import OrderTicketMini from '../layout/OrderTicketMini';
 import { useEffect, useState } from 'react';
+import { sfx } from '../../utils/soundEngine';
 import { createPortal } from 'react-dom';
 import { useGame } from '../../context/GameContext';
 import { IngredientArt } from '../entities/Ingredient';
@@ -216,6 +217,15 @@ export default function HydrationStation() {
     if (isHydrating && hydrationTime >= MAX_TICKS) { setIsHydrating(false); setStopped(true); }
   }, [isHydrating, hydrationTime]);
 
+  // Sonido: tic-tac mientras corre el reposo, campana al entrar en la ventana ideal, y limpieza al salir
+  useEffect(() => {
+    if (!isHydrating || !isPlaying) return undefined;
+    sfx.startTickLoop();
+    return () => sfx.stopLoop('tick');
+  }, [isHydrating, isPlaying]);
+  useEffect(() => { if (isHydrating && hydrationTime === IDEAL_MIN) sfx.zoneReady(); }, [isHydrating, hydrationTime]);
+  useEffect(() => () => sfx.stopAllLoops(), []);
+
   // Con la vista ampliada abierta, los atajos de teclado de la cinta no deben actuar
   useEffect(() => {
     if (!isZoomedIn) return undefined;
@@ -231,8 +241,9 @@ export default function HydrationStation() {
     setChosen(true);
     setHydrationTime(0);
     setIsHydrating(true);
+    sfx.sprinkle();
   };
-  const stop = () => { setIsHydrating(false); setStopped(true); };
+  const stop = () => { setIsHydrating(false); setStopped(true); (hydrationTime >= IDEAL_MIN && hydrationTime <= IDEAL_MAX) ? sfx.ding() : sfx.warning(); };
 
   // Elegir la gelatina tiñe el agua del bol. Una vez espolvoreada ya no se puede quitar.
   const toggleGelatin = () => {

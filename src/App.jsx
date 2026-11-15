@@ -1,4 +1,7 @@
 import { useEffect, useState } from 'react';
+import { sfx, setSoundEnabled } from './utils/soundEngine';
+import StartScreen from './StartScreen';
+import SetupScreen from './SetupScreen';
 import { GameProvider, useGame } from './context/GameContext';
 import { useGameLoop } from './hooks/useGameLoop';
 import HelperCharacter from './components/HelperCharacter';
@@ -12,6 +15,7 @@ import CoolingStation from './components/stations/CoolingStation';
 import QualityControlStation from './components/stations/QualityControlStation';
 import TimeUpModal from './components/layout/TimeUpModal';
 import ResultsModal from './components/layout/ResultsModal';
+import CertificateScreen from './components/layout/CertificateScreen';
 import Gummy from './components/entities/Gummy';
 import { ArrowIcon, PauseIcon, PlayIcon, SpinIcon, StarIcon } from './components/entities/Icons';
 import { STATION, FIRST_STATION, LAST_STATION } from './constants/stations';
@@ -20,10 +24,10 @@ import shapesData from './data/shapes.json';
 
 // Frases de la ingeniera guía según la estación en la que está la bandeja
 const HELPER_BY_STATION = {
-  [STATION.HYDRATION]: { text: '¡Hola! Vamos a preparar gelatina. Entra a la máquina para hidratarla con agua fría.' },
+  [STATION.HYDRATION]: { text: ' Vamos a preparar gelatina. Entra a la máquina para hidratarla con agua fría.' },
   [STATION.FORMULATION]: { text: '¡El momento de la verdad! Entra a la estación y elige tu base y pigmento.' },
   [STATION.MIXING]: { text: '¡A mezclar se ha dicho! Entra y asegúrate de que todo quede homogéneo.' },
-  [STATION.HEATING]: { type: 'warning', text: '¡Atención aquí! Entra a cocinar, pero cuida que la temperatura no suba de 40°C.' },
+  [STATION.HEATING]: { type: 'warning', text: '¡Atención aquí! Entra a cocinar, pero cuida que la temperatura no suba de lo indicado.' },
   [STATION.MOLDING]: { text: '¡A darle forma! Entra y elige el molde correcto para tu pedido.' },
   [STATION.COOLING]: { text: '¡Casi listos! Entra al túnel y detén el frío justo a tiempo.' },
   [STATION.QUALITY]: { text: '¡Trabajo terminado! Veamos si la gomita cumple con las especificaciones.' },
@@ -44,15 +48,18 @@ const describeOrder = (order) => {
   return { sweet, pig, shapeName };
 };
 
-function GameBoard() {
+function GameBoard({ onExit, onSettings }) {
   useGameLoop();
   const {
     isPlaying, setIsPlaying, activeOrders, activeTray, score, totalOrders, gameFinished,
-    advanceConveyor, retreatConveyor, restartGame, runId,
+    advanceConveyor, retreatConveyor, restartGame, runId, results,
   } = useGame();
+  const infinite = totalOrders === Infinity;
+  // Turno perfecto: todos los pedidos del turno cerrados y TODOS aprobados (sin errores y dentro de su tiempo)
+  const perfectShift = !infinite && results.length === totalOrders && results.every((r) => r.status === 'approved');
   const current = activeOrders[0];
   const currentInfo = current ? describeOrder(current) : null;
-  const orderNumber = Math.min(totalOrders - activeOrders.length + 1, totalOrders);
+  const orderNumber = infinite ? results.length + 1 : Math.min(totalOrders - activeOrders.length + 1, totalOrders);
 
   // Reiniciar partida con confirmación (pausa mientras se decide)
   const [confirming, setConfirming] = useState(false);
@@ -63,6 +70,8 @@ function GameBoard() {
 
   // Pedido caducado: el reloj del pedido activo llegó a 0
   const orderExpired = Boolean(current) && current.timeRemaining <= 0 && activeTray.station < LAST_STATION;
+  // Sonido: alerta cuando el tiempo del pedido está por acabarse
+  useEffect(() => { const t = current?.timeRemaining; if (isPlaying && (t === 15 || (t <= 5 && t > 0))) sfx.warning(); }, [current?.timeRemaining]);
 
   // Reglas de la cinta: ← no baja de la primera estación; se bloquean en pausa, en QA, con alertas y al terminar
   const blocked = gameFinished || orderExpired || confirming;
@@ -96,8 +105,17 @@ function GameBoard() {
             <button onClick={askRestart} className="gl-btn gl-btn--purple gl-btn--icon" aria-label="Reiniciar partida" title="Reiniciar partida">
               <SpinIcon size={20} />
             </button>
-            <p className="gl-pill gl-pill--time">PEDIDO {orderNumber} / {totalOrders}</p>
+            <p className="gl-pill gl-pill--time">PEDIDO {orderNumber} / {infinite ? '∞' : totalOrders}</p>
             <p className="gl-pill gl-pill--score"><StarIcon size={24} />{score} PTS</p>
+            {/* Navegación: ambos reinician el turno actual (se desmonta la partida) */}
+            <button
+              onClick={onSettings} title="Volver a Ajustes"
+              className="rounded-full border-2 border-white/80 bg-gradient-to-b from-sky-400 to-blue-600 px-3 py-1 text-sm font-extrabold text-white shadow-[0_3px_0_#1e3a8a] transition-transform hover:brightness-110 active:translate-y-0.5"
+            >⚙ Ajustes</button>
+            <button
+              onClick={onExit} title="Volver al Inicio"
+              className="rounded-full border-2 border-white/80 bg-gradient-to-b from-yellow-300 to-orange-500 px-3 py-1 text-sm font-extrabold text-indigo-950 shadow-[0_3px_0_#b45309] transition-transform hover:brightness-110 active:translate-y-0.5"
+            >🏠 Inicio</button>
           </div>
         </div>
 
@@ -211,7 +229,9 @@ function GameBoard() {
 
       {/* ALERTA DE TIEMPO AGOTADO DEL PEDIDO / RESULTADOS FINALES */}
       {orderExpired && !gameFinished && <TimeUpModal />}
-      {gameFinished && <ResultsModal />}
+      {gameFinished && (perfectShift
+        ? <CertificateScreen results={results} score={score} onExit={onExit} />
+        : <ResultsModal onExit={onExit} />)}
 
       {/* CONFIRMAR REINICIO */}
       {confirming && (
@@ -232,9 +252,33 @@ function GameBoard() {
 }
 
 export default function App() {
+  // Máquina de estados: START -> CONFIG -> PLAYING
+  const [gameState, setGameState] = useState('START');
+  const [gameConfig, setGameConfig] = useState({ soundOn: true, orderCount: 3 }); // orderCount: 3 | 5 | 'infinite'
+
+  // Sonido: sincroniza con gameConfig.soundOn y da un pop a todos los botones habilitados
+  useEffect(() => { setSoundEnabled(gameConfig.soundOn); }, [gameConfig.soundOn]);
+  useEffect(() => {
+    const h = (e) => { if (e.target.closest?.('button:not(:disabled)')) sfx.pop(); };
+    window.addEventListener('click', h, true);
+    return () => window.removeEventListener('click', h, true);
+  }, []);
+
+  if (gameState === 'START') {
+    return <StartScreen onPlay={() => setGameState('CONFIG')} />;
+  }
+  if (gameState === 'CONFIG') {
+    return (
+      <SetupScreen
+        config={gameConfig}
+        onBack={() => setGameState('START')}
+        onStart={(cfg) => { setGameConfig(cfg); setGameState('PLAYING'); }}
+      />
+    );
+  }
   return (
-    <GameProvider>
-      <GameBoard />
+    <GameProvider config={{ ...gameConfig, onExit: () => setGameState('START') }}>
+      <GameBoard onExit={() => setGameState('START')} onSettings={() => setGameState('CONFIG')} />
     </GameProvider>
   );
 }

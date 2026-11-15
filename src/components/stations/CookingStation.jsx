@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { sfx } from '../../utils/soundEngine';
 import { useGame } from '../../context/GameContext';
 import HelperCharacter from '../HelperCharacter';
 import ZoomShell, { INK, Pipe, mmss } from '../layout/ZoomShell';
@@ -56,6 +57,16 @@ export default function CookingStation() {
   // true tras pulsar APAGAR FUEGO (o al volver con la bandeja ya calentada): la temperatura queda congelada y se evalúa
   const [stopped, setStopped] = useState(activeTray.temperature > MIN_T);
   const burned = Boolean(activeTray.burned);
+  useEffect(() => { if (burned) { sfx.warning(); sfx.stopLoop('boil'); } }, [burned]);
+  // Sonido: alerta térmica repetida cerca del límite y limpieza al salir de la estación
+  const nearLimit = on && !burned && temp >= limit - 10;
+  useEffect(() => {
+    if (!nearLimit) return undefined;
+    sfx.tempWarning();
+    const id = setInterval(sfx.tempWarning, 700);
+    return () => clearInterval(id);
+  }, [nearLimit]);
+  useEffect(() => () => sfx.stopAllLoops(), []);
 
   // Temporizador interno del fuego: solo corre mientras está encendido.
   // Al apagarlo no hay enfriamiento: la temperatura se congela en el valor alcanzado.
@@ -72,12 +83,14 @@ export default function CookingStation() {
   useEffect(() => {
     setActiveTray((prev) => {
       const nowBurned = prev.burned || temp > limit;
-      return prev.temperature === temp && prev.burned === nowBurned ? prev : { ...prev, temperature: temp, burned: nowBurned };
+      // cookTemp = temperatura máxima alcanzada en la cocción (Enfriamiento después sobrescribe `temperature`)
+      const cookTemp = Math.max(prev.cookTemp ?? 20, temp);
+      return prev.temperature === temp && prev.burned === nowBurned && prev.cookTemp === cookTemp ? prev : { ...prev, temperature: temp, cookTemp, burned: nowBurned };
     });
   }, [temp, limit, setActiveTray]);
 
-  const turnOn = () => { setStopped(false); setOn(true); };
-  const turnOff = () => { setOn(false); setStopped(true); };
+  const turnOn = () => { sfx.ignite(); sfx.startBoilLoop(); setStopped(false); setOn(true); };
+  const turnOff = () => { sfx.stopLoop('boil'); if (temp <= limit) sfx.ding(); setOn(false); setStopped(true); };
   const confirm = () => { if (on) turnOff(); setIsZoomedIn(false); };
 
   // Tras APAGAR FUEGO: retroalimentación fija según el valor congelado
@@ -87,11 +100,13 @@ export default function CookingStation() {
       : { cls: 'ok', text: '✅ Temperatura Correcta' })
     : burned ? { cls: 'bad', text: '¡Se quemó! Superaste los ' + limit + '°C. Apaga el fuego.' }
     : on && temp >= limit - 10 ? { cls: 'bad', text: '¡Casi! Apaga el fuego ya.' }
-    : { cls: 'idle', text: `Zona segura: hasta ${limit}°C${limit < 100 ? ' (Pitahaya)' : ''}.` };
+    : { cls: 'idle', text: limit <= 40 ? `Zona segura: hasta ${limit}°C (Pitahaya)` : `Zona ideal: 60°C - ${limit}°C` };
 
   return (
     <ZoomShell
-      helper={<HelperCharacter type="warning" text="🚨 ¡ALERTA! ¡No superes los 40 °C! Controla el calor para proteger el pigmento." />}
+      helper={limit <= 40
+        ? <HelperCharacter type="warning" text="🚨 ¡ALERTA! ¡No superes los 40 °C! Controla el calor para proteger las betalaínas." />
+        : <HelperCharacter type="info" text={`🔥 Calienta la mezcla entre 60 °C y ${limit} °C para activar la gelatina sin quemar el lote.`} />}
       badge={['#ff9aa8', '#e0314b']} num="4" title="04. COCCIÓN"
       isZoomedIn={isZoomedIn} onOpen={() => setIsZoomedIn(true)} onConfirm={confirm}
       machine={<Marmita temp={temp} limit={limit} on={on} burned={burned} />}

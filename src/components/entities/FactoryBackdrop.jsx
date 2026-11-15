@@ -1,5 +1,6 @@
 /* Fondo de la fábrica: pared lila, ventanales con colinas, tuberías y banderines. */
 const WINDOWS = [90, 330, 570, 810];
+const NANEGAL_SRC = '/assets/fondo-nanegal.jpg'; // public/assets/images/fundo-nanegal.png
 const BUNTING = ['#ff6fb5', '#ffc12e', '#5b8cff', '#34c759', '#ff8a2a', '#b995ff'];
 
 export default function FactoryBackdrop() {
@@ -21,6 +22,9 @@ export default function FactoryBackdrop() {
         <radialGradient id="gl-glow" cx=".5" cy=".5" r=".5">
           <stop offset="0" stopColor="#fff" stopOpacity=".7" /><stop offset="1" stopColor="#fff" stopOpacity="0" />
         </radialGradient>
+        <clipPath id="gl-win-clip">
+          {WINDOWS.map((x) => <path key={x} d={`M${x + 8} 244V122Q${x + 8} 66 ${x + 50} 66T${x + 92} 122V244Z`} />)}
+        </clipPath>
       </defs>
 
       <rect width="1000" height="520" fill="url(#gl-wall)" />
@@ -30,16 +34,30 @@ export default function FactoryBackdrop() {
       ))}
       <ellipse cx="500" cy="150" rx="520" ry="160" fill="url(#gl-glow)" />
 
-      {/* ventanales con arco */}
-      {WINDOWS.map((x, i) => (
+      {/* ventanales con arco: marco + cielo de respaldo */}
+      {WINDOWS.map((x) => (
         <g key={x}>
           <path d={`M${x} 250V120Q${x} 56 ${x + 50} 56T${x + 100} 120V250Z`} fill="#8a63e8" />
           <path d={`M${x + 8} 244V122Q${x + 8} 66 ${x + 50} 66T${x + 92} 122V244Z`} fill="url(#gl-sky)" />
-          <path d={`M${x + 8} 244V200Q${x + 40} 168 ${x + 92} 196V244Z`} fill={i % 2 ? '#9be08a' : '#7ed67a'} />
-          <path d={`M${x + 8} 244V220Q${x + 60} 196 ${x + 92} 222V244Z`} fill="#6cc96a" />
-          <ellipse cx={x + 34 + (i % 2) * 20} cy="108" rx="18" ry="7" fill="#fff" opacity=".9" />
-          <ellipse cx={x + 46 + (i % 2) * 20} cy="102" rx="12" ry="6" fill="#fff" opacity=".9" />
+        </g>
+      ))}
+
+      {/* paisaje de Nanegal: UNA panorámica continua repartida entre las 4 ventanas */}
+      <g clipPath="url(#gl-win-clip)">
+        {/* Encuadre: imagen más alta que las ventanas y subida, para ver montañas, neblina y copas de palmeras */}
+        <image
+          href={NANEGAL_SRC} x={WINDOWS[0] + 8} y="20" width={WINDOWS[3] - WINDOWS[0] + 84} height="342"
+          preserveAspectRatio="xMidYMid slice"
+        />
+        {/* velo de vidrio muy suave */}
+        <rect x={WINDOWS[0]} y="56" width={WINDOWS[3] - WINDOWS[0] + 100} height="200" fill="rgba(255,255,255,0.12)" />
+      </g>
+
+      {/* travesaños, reflejos de vidrio y repisa (por encima del paisaje) */}
+      {WINDOWS.map((x) => (
+        <g key={x}>
           <path d={`M${x + 50} 56V250M${x + 8} 150H${x + 92}`} stroke="#8a63e8" strokeWidth="5" />
+          <path d={`M${x + 22} 244L${x + 44} 68H${x + 58}L${x + 36} 244Z`} fill="#fff" opacity=".22" />
           <path d={`M${x + 16} 122Q${x + 16} 80 ${x + 34} 74`} stroke="#fff" strokeWidth="5" strokeLinecap="round" fill="none" opacity=".55" />
           <rect x={x - 6} y="248" width="112" height="12" rx="6" fill="#a37cf2" />
         </g>

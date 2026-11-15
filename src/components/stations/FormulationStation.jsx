@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { sfx } from '../../utils/soundEngine';
 import { useGame } from '../../context/GameContext';
 import ingredientsData from '../../data/ingredients.json';
 import IngredientCard from '../entities/Ingredient';
@@ -103,6 +104,7 @@ export default function FormulationStation() {
 
   // CONFIRMAR: inyecta la fórmula en la bandeja (cambiar de pigmento reinicia la mezcla, como antes)
   const confirm = () => {
+    sfx.ding();
     setActiveTray((prev) => ({
       ...prev,
       base: base ?? prev.base,
@@ -127,7 +129,7 @@ export default function FormulationStation() {
         <p className="gl-zoom__label">Base / Endulzante</p>
         <div style={{ display: 'flex', gap: '.5rem' }}>
           {bases.map((b) => (
-            <IngredientCard key={b.id} item={b} onClick={() => setBase(b)} selected={base?.id === b.id} artSize={44} />
+            <IngredientCard key={b.id} item={b} onClick={() => { setBase(b); sfx.pour(); }} selected={base?.id === b.id} artSize={44} />
           ))}
         </div>
       </div>
@@ -137,7 +139,7 @@ export default function FormulationStation() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '.5rem' }}>
           <div style={{ display: 'flex', gap: '.5rem' }}>
             {slots.filter((s) => !s.group).map((s) => (
-              <IngredientCard key={s.pigment.id} item={s.pigment} onClick={() => setPigment(s.pigment)} selected={pigment?.id === s.pigment.id} artSize={44} />
+              <IngredientCard key={s.pigment.id} item={s.pigment} onClick={() => { setPigment(s.pigment); sfx.dropExtract(); }} selected={pigment?.id === s.pigment.id} artSize={44} />
             ))}
           </div>
           {slots.filter((s) => s.group).map((s) => (
@@ -145,7 +147,7 @@ export default function FormulationStation() {
               <p className="gl-hint-text" style={{ color: '#e5dbff' }}>{s.name}</p>
               <div style={{ display: 'flex', gap: '.4rem' }}>
                 {s.items.map((p) => (
-                  <IngredientCard key={p.id} item={{ ...p, name: p.variant }} onClick={() => setPigment(p)} selected={pigment?.id === p.id} artSize={38} />
+                  <IngredientCard key={p.id} item={{ ...p, name: p.variant }} onClick={() => { setPigment(p); sfx.dropExtract(); }} selected={pigment?.id === p.id} artSize={38} />
                 ))}
               </div>
             </div>

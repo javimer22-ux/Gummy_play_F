@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { sfx } from '../../utils/soundEngine';
 import { useGame } from '../../context/GameContext';
 import Gummy, { GummyMold, visibleColor } from '../entities/Gummy';
 import shapes from '../../data/shapes.json';
@@ -58,8 +59,9 @@ export default function MoldingStation() {
     return () => clearTimeout(id);
   }, [injecting, pick]);
 
-  const choose = (id) => { setPick(id); setInjecting(true); };
+  const choose = (id) => { setPick(id); setInjecting(true); sfx.moldInject(); };
   const confirm = () => {
+    if (pick) sfx.ding();
     if (pick) setActiveTray((prev) => (prev.shape === pick ? prev : { ...prev, shape: pick }));
     setInjecting(false);
     setIsZoomedIn(false);

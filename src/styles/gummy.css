@@ -363,7 +363,7 @@ body { margin: 0; background: #2a1a55; overflow: auto; }
 /* Botones y mensaje */
 .gl-zoom__btns { display: flex; gap: .7rem; }
 .gl-zoom__btns .gl-btn { flex: 1; min-width: 0; white-space: normal; padding: .5rem .6rem; font-size: clamp(.8rem, 1.9vh, 1rem); line-height: 1.05; text-align: center; }
-.gl-zoom__glass .gl-hydro__msg { margin: 0; font-size: .75rem; }
+.gl-zoom__glass .gl-hydro__msg { margin: 0; font-size: .95rem; }
 .gl-zoom__glass .gl-hydro__msg--idle { background: rgba(255, 255, 255, .12); color: #fff; }
 .gl-zoom__glass .gl-hydro__msg--ok { background: rgba(52, 199, 89, .3); color: #c4ffd2; }
 .gl-zoom__glass .gl-hydro__msg--bad { background: rgba(255, 77, 109, .3); color: #ffd0d8; }
