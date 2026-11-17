@@ -119,7 +119,7 @@ const stepPct = (i) => (i * 100) / LAST_STEP; // 0 | 33.33 | 66.66 | 100
           {/* Botones inferiores */}
           <div className="flex flex-wrap items-center justify-between gap-3">
             <button
-              onClick={onBack}
+              onClick={() => onBack?.(draft)}
               className={`${arcade} border-white/80 bg-gradient-to-b from-orange-400 to-red-600 px-7 py-2.5 text-[clamp(1.1rem,2.2vw,1.7rem)] text-white shadow-[0_6px_0_#8a1c1c] hover:brightness-110`}
               style={{ textShadow: '0 2px 0 #8a1c1c' }}
             >⬅ VOLVER</button>

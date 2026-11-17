@@ -9,10 +9,10 @@ import ingredientsData from '../../data/ingredients.json';
 
 const WINDOW_SRC = '/assets/ventana-1.jpg'; // fotografía de la ventana del fondo (estación 1)
 const TICK_MS = 100;    // cada tick real (0,1 s)...
-const SIM_SEC = 5;      // ...suma 2 s simulados: 5 min de reposo ≈ 15 s reales
-const IDEAL_MIN = 60;  // 05:00
-const IDEAL_MAX = 66;  // 05:30 (rango ideal 05:00 – 05:30, ambos inclusive)
-const MAX_TICKS = 120;  // 10:00: se pasa de largo y el reposo se detiene solo
+const SIM_SEC = 300 / 80; // ...suma 3,75 s simulados: 5 min de reposo = 80 ticks = 8 s reales
+const IDEAL_MIN = 80;  // 05:00 (a los 8,0 s reales)
+const IDEAL_MAX = 88;  // 05:30 (a los 8,8 s reales; rango ideal 05:00 – 05:30, ambos inclusive)
+const MAX_TICKS = 160;  // 10:00 (a los 16 s): se pasa de largo y el reposo se detiene solo
 
 const clock = (ticks) => {
   const sec = Math.round(ticks * SIM_SEC);
@@ -87,6 +87,34 @@ function ProgressRing({ pct, ready }) {
           strokeDasharray={C} strokeDashoffset={C * (1 - pct / 100)} />
       </svg>
       <span className={`absolute inset-0 flex items-center justify-center text-lg font-extrabold leading-none ${ready ? 'text-emerald-300' : 'text-white'}`}>{pct}%</span>
+    </div>
+  );
+}
+
+/* Barra del reposo (solo visual). La aguja se mueve de forma continua por toda la barra y avanza más rápido
+   al cruzar la franja ideal: 00:00→05:00 ocupa el 55 %, 05:00→05:30 el 30 % y 05:30→10:00 el 15 % restante. */
+const BAND_L = 55, BAND_R = 85;
+const axPct = (t) => {
+  const end = IDEAL_MAX + 1;
+  if (t <= IDEAL_MIN) return (Math.max(0, t) / IDEAL_MIN) * BAND_L;
+  if (t <= end) return BAND_L + ((t - IDEAL_MIN) / (end - IDEAL_MIN)) * (BAND_R - BAND_L);
+  return Math.min(100, BAND_R + ((t - end) / (MAX_TICKS - end)) * (100 - BAND_R));
+};
+function RangeBar({ ticks, ready, approaching }) {
+  const left = BAND_L;
+  const right = BAND_R;
+  const pill = 'absolute top-[17px] whitespace-nowrap rounded-full bg-slate-900/90 px-1.5 py-0.5 text-xs font-bold leading-none text-emerald-300 ring-1 ring-emerald-300/50';
+  return (
+    <div className="relative mt-2 h-[36px]" role="img" aria-label="Rango ideal de reposo: de 05:00 a 05:30">
+      <div className="absolute inset-x-0 top-0 h-[14px] overflow-hidden rounded-full border border-white/30 bg-slate-950/70">
+        <div className={`h-full ${ready ? 'bg-emerald-400' : 'bg-cyan-400'} transition-[width] duration-100 ease-linear`} style={{ width: `${axPct(ticks)}%`, opacity: .55 }} />
+      </div>
+      <div className={`absolute top-[-2px] h-[18px] rounded-[6px] border-2 bg-emerald-400/85 ${ready ? 'border-white shadow-[0_0_14px_rgba(52,211,153,1)]' : 'border-white/90 shadow-[0_0_8px_rgba(52,211,153,.8)]'} ${ready || approaching ? 'animate-pulse motion-reduce:animate-none' : ''}`}
+        style={{ left: `${left}%`, width: `${right - left}%` }} />
+      {/* aguja del tiempo actual */}
+      <div className="absolute top-[-4px] h-[22px] w-[4px] -translate-x-1/2 rounded-full bg-white shadow-[0_0_6px_rgba(255,255,255,.9)] transition-[left] duration-100 ease-linear" style={{ left: `${axPct(ticks)}%` }} />
+      <span className={`${pill} -translate-x-full`} style={{ left: `calc(${left}% - 2px)` }}>05:00 ▶</span>
+      <span className={pill} style={{ left: `calc(${right}% + 2px)` }}>◀ 05:30</span>
     </div>
   );
 }
@@ -285,6 +313,7 @@ export default function HydrationStation() {
 
   // Solo visual: progreso hacia el tiempo ideal y estado "listo" (dentro de la ventana 05:00 – 05:30 o ya hidratada bien)
   const ringPct = Math.min(100, Math.round((hydrationTime / IDEAL_MIN) * 100));
+  const approaching = isHydrating && hydrationTime >= IDEAL_MIN - 20 && hydrationTime < IDEAL_MIN; // ~2 s antes de la ventana
   const ready = ((isHydrating || stopped) && hydrationTime >= IDEAL_MIN && hydrationTime <= IDEAL_MAX) || (finished && activeTray.hasLumps === false);
 
   let msg = { cls: 'idle', text: 'Espolvorea la gelatina y déjala reposar el tiempo justo.' };
@@ -324,7 +353,7 @@ export default function HydrationStation() {
 
         {/* Derecha (~35 %): panel de controles */}
         <div className="gl-zoom__side">
-          <div className="gl-zoom__glass">
+          <div className="gl-zoom__glass" style={{ gap: '.5rem' }}>
             <OrderTicketMini />
             <h2 className="gl-zoom__ptitle">01. HIDRATACIÓN DE LA GELATINA (BLOOMING)</h2>
 
@@ -338,18 +367,22 @@ export default function HydrationStation() {
             </div>
 
             <div>
-              <p className="gl-zoom__label">Reposo</p>
+              <p className="sr-only">Reposo</p>
               <div className="flex items-center gap-3">
                 <div className="gl-zoom__inset gl-zoom__lcd min-w-0 flex-1"><SegDisplay text={clock(hydrationTime)} /></div>
                 <ProgressRing pct={ringPct} ready={ready} />
               </div>
-              {ready ? (
-                <p className="m-0 mt-1.5 animate-pulse rounded-full bg-emerald-500/25 px-3 py-0.5 text-center text-xs font-extrabold tracking-wide text-emerald-300 shadow-[0_0_10px_rgba(52,211,153,.55)] motion-reduce:animate-none">✅ ¡GELATINA LISTA!</p>
-              ) : (
-                <p className="gl-zoom__label" style={{ textAlign: 'center', marginTop: '.35rem' }}>
-                  Detén entre {clock(IDEAL_MIN)} y {clock(IDEAL_MAX)}
-                </p>
-              )}
+              <RangeBar ticks={hydrationTime} ready={ready} approaching={approaching} />
+              {/* línea de estado con altura fija: así el botón de abajo no se desplaza al cambiar el mensaje */}
+              <div className="mt-1.5 flex h-[22px] items-center justify-center">
+                {ready ? (
+                  <p className="m-0 w-full animate-pulse rounded-full bg-emerald-500/25 px-3 py-0.5 text-center text-xs font-extrabold tracking-wide text-emerald-300 shadow-[0_0_10px_rgba(52,211,153,.55)] motion-reduce:animate-none">✅ ¡GELATINA LISTA!</p>
+                ) : approaching ? (
+                  <p className="m-0 w-full animate-pulse rounded-full bg-amber-400/25 px-3 py-0.5 text-center text-xs font-extrabold tracking-wide text-amber-200 motion-reduce:animate-none">⏳ ¡Prepárate!</p>
+                ) : (
+                  <p className="m-0 text-center text-xs font-bold text-white/70">Detén entre {clock(IDEAL_MIN)} y {clock(IDEAL_MAX)}</p>
+                )}
+              </div>
             </div>
 
             <div className="gl-zoom__btns">

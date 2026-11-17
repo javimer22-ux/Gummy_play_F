@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useState } from 'react';
 import { sfx, setSoundEnabled } from './utils/soundEngine';
 import StartScreen from './StartScreen';
 import Watermark from './components/Watermark';
@@ -49,11 +49,9 @@ const helperFor = (station, isTutorial, stepDone, hasLumps) => {
   const type = station === STATION.HEATING ? 'warning' : undefined;
   if (!stepDone) return { type, text: pair[0] };
   const lumps = isTutorial && station === 1 && hasLumps === true ? ' (con grumos: afectará al Mezclado)' : '';
-  return {
-    type, text: isTutorial
-      ? `${pair[1]}${lumps} Ahora pulsa la flecha derecha (→) para ir a ${NEXT_NAME[station]}.`
-      : `${pair[1]} Avanza a ${NEXT_NAME[station]} (→).`
-  };
+  return { type, text: isTutorial
+    ? `${pair[1]}${lumps} Ahora pulsa la flecha derecha (→) para ir a ${NEXT_NAME[station]}.`
+    : `${pair[1]} Avanza a ${NEXT_NAME[station]} (→).` };
 };
 
 const formatTime = (seconds) => {
@@ -223,18 +221,18 @@ function GameBoard({ onExit, onSettings }) {
             </button>
           </div>
           <div className="h-full min-w-0 flex-1">
-            {activeTray.station === STATION.HYDRATION && <HydrationStation key={runId} />}
-            {activeTray.station === STATION.FORMULATION && <FormulationStation />}
-            {activeTray.station === STATION.MIXING && <MixingStation />}
-            {activeTray.station === STATION.HEATING && <CookingStation />}
-            {activeTray.station === STATION.MOLDING && <MoldingStation />}
-            {activeTray.station === STATION.COOLING && <CoolingStation />}
-            {/* La última estación (QA) es modal */}
-            {activeTray.station >= LAST_STATION && (
-              <div className="gl-panel items-center justify-center">
-                <h2 className="gl-panel__title" style={{ fontSize: '1.8rem', opacity: 0.55 }}>ESPERANDO REINICIO...</h2>
-              </div>
-            )}
+          {activeTray.station === STATION.HYDRATION && <HydrationStation key={runId} />}
+          {activeTray.station === STATION.FORMULATION && <FormulationStation />}
+          {activeTray.station === STATION.MIXING && <MixingStation />}
+          {activeTray.station === STATION.HEATING && <CookingStation />}
+          {activeTray.station === STATION.MOLDING && <MoldingStation />}
+          {activeTray.station === STATION.COOLING && <CoolingStation />}
+          {/* La última estación (QA) es modal */}
+          {activeTray.station >= LAST_STATION && (
+            <div className="gl-panel items-center justify-center">
+              <h2 className="gl-panel__title" style={{ fontSize: '1.8rem', opacity: 0.55 }}>ESPERANDO REINICIO...</h2>
+            </div>
+          )}
           </div>
         </div>
       </footer>
@@ -276,32 +274,6 @@ function GameBoard({ onExit, onSettings }) {
 }
 
 function AppInner() {
-  // Intro automática solo la primera vez por sesión (compatible con autoplay usando muted)
-  const [showAutoIntro, setShowAutoIntro] = useState(true);
-  const [introMuted, setIntroMuted] = useState(true);
-  const introVideoRef = useRef(null);
-
-  const closeAutoIntro = () => {
-    sessionStorage.setItem('gummy_intro_seen', '1');
-    setShowAutoIntro(false);
-  };
-
-  const toggleIntroSound = () => {
-    const nextMuted = !introMuted;
-    setIntroMuted(nextMuted);
-    if (introVideoRef.current) {
-      introVideoRef.current.muted = nextMuted;
-      if (!nextMuted) introVideoRef.current.play().catch(() => { });
-    }
-  };
-
-  useEffect(() => {
-    if (!showAutoIntro) return undefined;
-    const onKey = (e) => { if (e.key === 'Escape') closeAutoIntro(); };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [showAutoIntro]);
-
   // Máquina de estados: START -> CONFIG -> PLAYING
   const [gameState, setGameState] = useState('START');
   const [gameConfig, setGameConfig] = useState({ soundOn: true, orderCount: 3 }); // orderCount: 3 | 5 | 'infinite'
@@ -313,39 +285,6 @@ function AppInner() {
     window.addEventListener('click', h, true);
     return () => window.removeEventListener('click', h, true);
   }, []);
-
-  if (showAutoIntro) {
-    return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black" role="dialog" aria-modal="true" aria-label="Introducción inicial">
-        <button
-          type="button"
-          onClick={toggleIntroSound}
-          className="absolute left-5 top-5 z-10 rounded-full border-4 border-white bg-amber-400 px-4 py-1.5 text-sm font-black text-indigo-950 shadow-[0_4px_0_#b45309] transition-transform hover:brightness-110 active:translate-y-0.5"
-        >
-          {introMuted ? '🔊 ACTIVAR SONIDO' : '🔇 SILENCIAR'}
-        </button>
-
-        <button
-          type="button"
-          onClick={closeAutoIntro}
-          className="absolute right-5 top-5 z-10 rounded-full border-4 border-white bg-rose-500 px-4 py-1.5 text-sm font-black text-white shadow-[0_4px_0_#9f1239] transition-transform hover:brightness-110 active:translate-y-0.5"
-        >
-          SALTAR INTRO ⏭
-        </button>
-
-        <video
-          ref={introVideoRef}
-          src="/assets/intro.mp4"
-          autoPlay
-          muted
-          playsInline
-          onEnded={closeAutoIntro}
-          onError={closeAutoIntro}
-          className="h-full w-full bg-black object-contain"
-        />
-      </div>
-    );
-  }
 
   if (gameState === 'START') {
     return (
@@ -359,7 +298,7 @@ function AppInner() {
     return (
       <SetupScreen
         config={gameConfig}
-        onBack={() => setGameState('START')}
+        onBack={(cfg) => { if (cfg) setGameConfig(cfg); setGameState('START'); }}
         onStart={(cfg) => { setGameConfig(cfg); setGameState('PLAYING'); }}
       />
     );

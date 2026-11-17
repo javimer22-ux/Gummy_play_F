@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { sfx } from '../../utils/soundEngine';
 import { useGame } from '../../context/GameContext';
 import HelperCharacter from '../HelperCharacter';
+import { visibleColor } from '../entities/Gummy';
 import ZoomShell, { INK, Pipe, mmss } from '../layout/ZoomShell';
 
 const TICK_MS = 100;
@@ -9,7 +10,7 @@ const HEAT = 2;     // °C por tick con fuego (≈20°C/s)
 const MIN_T = 20, MAX_T = 140;
 
 /* Marmita con termómetro visible y llama */
-function Marmita({ temp, limit, on, burned }) {
+function Marmita({ temp, limit, on, burned, liquid }) {
   const isPitahaya = limit <= 40;
   const visualMaxTemp = isPitahaya ? 52 : 110;
   const minTargetTemp = isPitahaya ? 30 : 60;
@@ -36,7 +37,7 @@ function Marmita({ temp, limit, on, burned }) {
       {/* mezcla burbujeando */}
       <clipPath id="gl-pot-clip"><rect x="236" y="300" width="328" height="296" rx="40" /></clipPath>
       <g clipPath="url(#gl-pot-clip)">
-        <rect x="236" y="340" width="328" height="270" fill={burned ? '#2a1a14' : '#ff9fcf'} style={{ transition: 'fill .4s' }} opacity=".92" />
+        <rect x="236" y="340" width="328" height="270" fill={burned ? '#2a1a14' : liquid} style={{ transition: 'fill .4s' }} opacity=".92" />
         <ellipse cx="400" cy="340" rx="164" ry="10" fill="#fff" opacity=".35" />
         {on && [[300, 0], [380, .5], [450, 1], [340, 1.4]].map(([x, d]) => <circle key={x} className="gl-bubble" style={{ animationDelay: `${d}s` }} cx={x} cy="560" r="8" fill="#fff" opacity=".7" />)}
       </g>
@@ -122,7 +123,7 @@ export default function CookingStation() {
         : <HelperCharacter type="info" text={`🔥 Calienta la mezcla entre 60 °C y ${limit} °C para activar la gelatina sin quemar el lote.`} />}
       badge={['#ff9aa8', '#e0314b']} num="4" title="04. COCCIÓN"
       isZoomedIn={isZoomedIn} onOpen={() => setIsZoomedIn(true)} onConfirm={confirm}
-      machine={<Marmita temp={temp} limit={limit} on={on} burned={burned} />}
+      machine={<Marmita temp={temp} limit={limit} on={on} burned={burned} liquid={visibleColor(activeTray.pigment?.color ?? activeTray.base?.color ?? '#ff9fcf')} />}
     >
       <div className="gl-zoom__inset">
         <p className="gl-zoom__label">Tiempo de fuego</p>

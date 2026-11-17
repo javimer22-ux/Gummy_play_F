@@ -40,7 +40,7 @@ export default function ConveyorBelt() {
 
   // Color visual de la mezcla en la cinta
   const getRenderColor = () => {
-    if (activeTray.pigment && activeTray.station >= STATION.MIXING) return activeTray.pigment.color;
+    if (activeTray.pigment && activeTray.station >= STATION.FORMULATION) return activeTray.pigment.color;
     if (activeTray.base) return activeTray.base.color;
     return 'transparent';
   };

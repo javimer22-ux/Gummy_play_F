@@ -5,7 +5,7 @@ export default function RotateHint() {
   if (!open) return null;
   return (
     <div className="gl-rotate-hint" role="status">
-      <span>📱 Gira el teléfono a horizontal para ver mejor la fábrica</span>
+      <span>📱 Coloca el teléfono en horizontal para una mejor experiencia</span>
       <button onClick={() => setOpen(false)} aria-label="Cerrar aviso">✕</button>
     </div>
   );
