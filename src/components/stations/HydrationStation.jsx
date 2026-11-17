@@ -399,10 +399,10 @@ export default function HydrationStation() {
       {/* Pie oscuro: ayudante a la izquierda/centro, botón verde a la derecha */}
       <div className="gl-zoom__footer flex w-full items-center justify-between px-8">
         <div className="flex min-w-0 flex-1 justify-center">
-          <HelperCharacter key={String(stopped || finished)} text={isTutorial ? (stopped || finished ? "¡Gelatina hidratada! Pulsa 'Confirmar y alejar cámara'." : 'Espolvorea la gelatina sin sabor en agua fría y espera a que esponje.') : "¡A despertar la gelatina! 💦 Mézclala con agua fría y deja que se hidrate."} />
+          <HelperCharacter key={String(stopped || finished)} variant={isTutorial ? 'tutor' : undefined} text={isTutorial ? (stopped || finished ? "¡Gelatina hidratada! Pulsa 'Confirmar y alejar cámara'." : 'Espolvorea la gelatina sin sabor en agua fría y espera a que esponje.') : "¡A despertar la gelatina! 💦 Mézclala con agua fría y deja que se hidrate."} />
         </div>
         <div className="gl-zoom__exit">
-          <button onClick={confirm} className="gl-btn gl-btn--xl">
+          <button onClick={confirm} className={`gl-btn gl-btn--xl ${isTutorial && (stopped || finished) ? '!ring-4 ring-amber-300 !animate-pulse !shadow-[0_0_20px_#fde047]' : ''}`}>
             <span className="gl-zoom__tick">✔</span>
             <span>CONFIRMAR Y<br />ALEJAR CÁMARA</span>
           </button>
@@ -420,7 +420,7 @@ export default function HydrationStation() {
 
       <div className="gl-panel__body">
         <div className="gl-section" style={{ alignItems: 'center', justifyContent: 'center' }}>
-          <button onClick={() => setIsZoomedIn(true)} className="gl-btn gl-btn--gold gl-btn--xl">
+          <button onClick={() => setIsZoomedIn(true)} data-tut="operate" className="gl-btn gl-btn--gold gl-btn--xl">
             OPERAR ESTACIÓN
           </button>
         </div>

@@ -140,9 +140,9 @@ export default function ZoomShell({ badge, num, title, isZoomedIn, onOpen, onCon
 
       {/* Pie oscuro: ayudante a la izquierda/centro, botón verde a la derecha */}
       <div className="gl-zoom__footer flex w-full items-center justify-between px-8">
-        <div className="flex min-w-0 flex-1 justify-center">{tut ? <HelperCharacter key={String(done)} text={tut} /> : helper}</div>
+        <div className="flex min-w-0 flex-1 justify-center">{tut ? <HelperCharacter key={String(done)} text={tut} variant="tutor" /> : helper}</div>
         <div className="gl-zoom__exit">
-          <button onClick={onConfirm} className="gl-btn gl-btn--xl">
+          <button onClick={onConfirm} className={`gl-btn gl-btn--xl ${isTutorial && done ? '!ring-4 ring-amber-300 !animate-pulse !shadow-[0_0_20px_#fde047]' : ''}`}>
             <span className="gl-zoom__tick">✔</span>
             <span>CONFIRMAR Y<br />ALEJAR CÁMARA</span>
           </button>
@@ -160,7 +160,7 @@ export default function ZoomShell({ badge, num, title, isZoomedIn, onOpen, onCon
       <div className="gl-panel__body">
         <div className="gl-section" style={{ alignItems: 'center', justifyContent: 'center' }}>
           <button
-            onClick={onOpen}
+            onClick={onOpen} data-tut="operate"
             className={`gl-btn gl-btn--gold gl-btn--xl ${!isZoomedIn && !stepDone && hint ? '!ring-4 ring-amber-300 !animate-pulse !shadow-[0_0_20px_#fde047]' : ''}`}
           >OPERAR ESTACIÓN</button>
         </div>

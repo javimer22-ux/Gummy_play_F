@@ -38,6 +38,32 @@ function Compact({ text, warning, imgFailed, onImgError }) {
   );
 }
 
+/* ── Tutorial: dentro de la estación, más grande y con halo para que se note (cabe en el mismo pie, sin tapar controles) ── */
+function Tutor({ text, imgFailed, onImgError }) {
+  return (
+    <div className="animate-fade-in-up flex min-w-0 items-center gap-3" role="status">
+      <div className="relative h-[5.5rem] w-[4.6rem] shrink-0">
+        <span aria-hidden="true" className="absolute -inset-1 animate-pulse rounded-full ring-4 ring-amber-300/80 shadow-[0_0_18px_rgba(253,224,71,.65)] motion-reduce:animate-none" />
+        <div className="relative h-full w-full overflow-hidden rounded-full bg-gradient-to-b from-violet-300 to-sky-300 ring-2 ring-white shadow-lg">
+          {imgFailed ? (
+            <span className="grid h-full w-full place-items-center text-base font-extrabold text-indigo-950">IA</span>
+          ) : (
+            <img
+              src={AVATAR_SRC} alt="Ingeniera Agroindustrial, guía del laboratorio" draggable={false} onError={onImgError}
+              className="h-full w-full object-cover"
+              style={{ objectPosition: '50% 0%', transformOrigin: '50% 12%', transform: 'scale(1.55)' }}
+            />
+          )}
+        </div>
+      </div>
+      <div className="relative min-w-0 rounded-2xl border-2 border-amber-300 bg-indigo-950/90 px-4 py-2 text-[1.3rem] font-semibold leading-snug text-white shadow-[0_0_14px_rgba(253,224,71,.35)]">
+        <span aria-hidden="true" className="absolute -left-[7px] top-1/2 h-3 w-3 -translate-y-1/2 rotate-45 border-b-2 border-l-2 border-amber-300 bg-indigo-950" />
+        <p className="relative m-0">{text}</p>
+      </div>
+    </div>
+  );
+}
+
 /* ── Grande: vista general ── */
 function Floating({ text, warning, imgFailed, onImgError }) {
   return (
@@ -70,5 +96,6 @@ className="animate-fade-in h-72 w-auto shrink-0 select-none object-contain drop-
 export default function HelperCharacter({ text, type = 'info', variant = 'compact' }) {
   const [imgFailed, setImgFailed] = useState(false);
   const props = { text, warning: type === 'warning', imgFailed, onImgError: () => setImgFailed(true) };
+  if (variant === 'tutor') return <Tutor {...props} />;
   return variant === 'floating' ? <Floating {...props} /> : <Compact {...props} />;
 }

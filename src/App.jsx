@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { sfx, setSoundEnabled } from './utils/soundEngine';
 import StartScreen from './StartScreen';
 import Watermark from './components/Watermark';
@@ -18,6 +18,7 @@ import TimeUpModal from './components/layout/TimeUpModal';
 import ResultsModal from './components/layout/ResultsModal';
 import CertificateScreen from './components/layout/CertificateScreen';
 import { useStationGuide } from './components/layout/ZoomShell';
+import TutorialSpotlight from './components/layout/TutorialSpotlight';
 import Gummy from './components/entities/Gummy';
 import { ArrowIcon, PauseIcon, PlayIcon, SpinIcon, StarIcon } from './components/entities/Icons';
 import { STATION, FIRST_STATION, LAST_STATION } from './constants/stations';
@@ -86,6 +87,9 @@ function GameBoard({ onExit, onSettings }) {
   // Reiniciar partida con confirmación (pausa mientras se decide)
   const [confirming, setConfirming] = useState(false);
   const [resumeAfter, setResumeAfter] = useState(false);
+  // Foco del tutorial: se puede saltar; vuelve a activarse al reiniciar la partida
+  const [guideOff, setGuideOff] = useState(false);
+  useEffect(() => { setGuideOff(false); }, [runId]);
   const askRestart = () => { setResumeAfter(isPlaying); setIsPlaying(false); setConfirming(true); };
   const cancelRestart = () => { setConfirming(false); if (resumeAfter) setIsPlaying(true); };
   const confirmRestart = () => { setConfirming(false); restartGame(); };
@@ -197,7 +201,7 @@ function GameBoard({ onExit, onSettings }) {
               <ArrowIcon size={28} className="gl-flip" />
             </button>
             <button
-              onClick={advanceConveyor} disabled={!canAdvance}
+              onClick={advanceConveyor} disabled={!canAdvance} data-tut="next"
               className={`gl-btn gl-btn--lime gl-btn--pill ${stepDone && activeTray.station < LAST_STATION && hint ? '!ring-4 ring-amber-300 !animate-bounce !shadow-[0_0_22px_#fde047]' : ''}`} aria-label="Avanzar a la siguiente estación" title="Avanzar (→)"
             >
               <ArrowIcon size={28} />
@@ -237,6 +241,11 @@ function GameBoard({ onExit, onSettings }) {
         </div>
       </footer>
 
+      {/* TUTORIAL: foco que difumina todo menos lo que toca usar */}
+      {isTutorial && !guideOff && isPlaying && !confirming && !gameFinished && activeTray.station < LAST_STATION && (
+        <TutorialSpotlight station={activeTray.station} stepDone={stepDone && activeTray.station < LAST_STATION} onSkip={() => setGuideOff(true)} />
+      )}
+
       {/* PANTALLA DE CONTROL DE CALIDAD SUPERPUESTA (MODAL) */}
       {!gameFinished && !orderExpired && activeTray.station === STATION.QUALITY && (
         <div className="gl-modal">
@@ -274,6 +283,29 @@ function GameBoard({ onExit, onSettings }) {
 }
 
 function AppInner() {
+  // Intro automática cada vez que se abra o recargue la página (compatible con autoplay usando muted)
+  const [showAutoIntro, setShowAutoIntro] = useState(true);
+  const [introMuted, setIntroMuted] = useState(true);
+  const introVideoRef = useRef(null);
+
+  const closeAutoIntro = () => setShowAutoIntro(false);
+
+  const toggleIntroSound = () => {
+    const nextMuted = !introMuted;
+    setIntroMuted(nextMuted);
+    if (introVideoRef.current) {
+      introVideoRef.current.muted = nextMuted;
+      if (!nextMuted) introVideoRef.current.play().catch(() => {});
+    }
+  };
+
+  useEffect(() => {
+    if (!showAutoIntro) return undefined;
+    const onKey = (e) => { if (e.key === 'Escape') closeAutoIntro(); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [showAutoIntro]);
+
   // Máquina de estados: START -> CONFIG -> PLAYING
   const [gameState, setGameState] = useState('START');
   const [gameConfig, setGameConfig] = useState({ soundOn: true, orderCount: 3 }); // orderCount: 3 | 5 | 'infinite'
@@ -285,6 +317,39 @@ function AppInner() {
     window.addEventListener('click', h, true);
     return () => window.removeEventListener('click', h, true);
   }, []);
+
+  if (showAutoIntro) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black" role="dialog" aria-modal="true" aria-label="Introducción inicial">
+        <button
+          type="button"
+          onClick={toggleIntroSound}
+          className="absolute left-5 top-5 z-10 rounded-full border-4 border-white bg-amber-400 px-4 py-1.5 text-sm font-black text-indigo-950 shadow-[0_4px_0_#b45309] transition-transform hover:brightness-110 active:translate-y-0.5"
+        >
+          {introMuted ? '🔊 ACTIVAR SONIDO' : '🔇 SILENCIAR'}
+        </button>
+
+        <button
+          type="button"
+          onClick={closeAutoIntro}
+          className="absolute right-5 top-5 z-10 rounded-full border-4 border-white bg-rose-500 px-4 py-1.5 text-sm font-black text-white shadow-[0_4px_0_#9f1239] transition-transform hover:brightness-110 active:translate-y-0.5"
+        >
+          SALTAR INTRO ⏭
+        </button>
+
+        <video
+          ref={introVideoRef}
+          src="/assets/intro.mp4"
+          autoPlay
+          muted
+          playsInline
+          onEnded={closeAutoIntro}
+          onError={closeAutoIntro}
+          className="h-full w-full bg-black object-contain"
+        />
+      </div>
+    );
+  }
 
   if (gameState === 'START') {
     return (
