@@ -200,7 +200,7 @@ const UI_CONFIG = {
   },
 };
 
-const INTRO_VIDEO_SRC = '/public/assets/intro.mp4'; // video de introducción (public/assets/)
+const INTRO_VIDEO_SRC = '/assets/intro.mp4'; // video de introducción (public/assets/)
 
 export default function StartScreen({ onPlay }) {
   const { bloque, titulo, subtitulo, boton } = UI_CONFIG;
